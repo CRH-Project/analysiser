@@ -140,27 +140,27 @@ int runFlow(char * fileName)
 }	
 
 //UPLOAD 0 DOWNLOAD 1
-void printSize(std::ostream & o)
+void printSize(std::ostream & o,FlowType::dir_t d)
 {
-	o<<flowVec.size()<<std::endl;
 	for(auto flow : flowVec)
 	{
-		o<<flow.size<<" "<<flow.direction<<std::endl;
+		if(flow.direction==d)
+			o<<flow.size<<std::endl;
 	}
 }
-void printDuration(std::ostream & out)
+void printDuration(std::ostream & out,FlowType::dir_t d)
 {
-	out<<flowVec.size()<<std::endl;
 	for(auto flow : flowVec)
 	{
-		out<<flow.calDuration()<<" "<<flow.direction<<std::endl;
+		if(flow.direction==d)
+			out<<flow.calDuration()<<std::endl;
 	}
 }
-void printRate(std::ostream & out)
+void printRate(std::ostream & out,FlowType::dir_t d)
 {
-	out<<flowVec.size()<<std::endl;
 	for(auto flow : flowVec)
 	{
-		out<<flow.calRate()<<" "<<flow.direction<<std::endl;
+		if(flow.direction==d)
+			out<<flow.calRate()<<std::endl;
 	}
 }
