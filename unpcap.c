@@ -157,8 +157,8 @@ void handler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt) {
 				dst->zip += _len;
 			else dst->otherapp += _len;
 		}
-		//printf("Frame %d %s:%d download from %s:%d, %s, %s\n",
-		//		total, dstip_str, dstport, srcip_str, srcport, type, len);
+		printf("Frame %d %s:%d download from %s:%d, %s, %s\n",
+				total, dstip_str, dstport, srcip_str, srcport, type, len);
 	}
 	return;
 }
