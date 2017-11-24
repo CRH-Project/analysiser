@@ -191,7 +191,3 @@ double getMaxRate()
 		   maxRate=flow.calRate();
 	return maxRate;
 }
-//void sortPacket(Cmp cmp)
-//{
-//	std::sort(flowVec.begin(),flowVec.end(),cmp);
-//}

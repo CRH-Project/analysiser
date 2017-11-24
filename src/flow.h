@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <iostream>
+#include <algorithm>
 
 const int THRESHOLD =1000000;
 class PacketInfo{
@@ -72,6 +73,9 @@ public:
 	}
 
 };
+
+extern std::vector<FlowType> flowVec;
+
 struct Less{
 	bool operator()(const SocketStat & l,const SocketStat & r)
 	{
@@ -105,6 +109,10 @@ void printRate(std::ostream&,FlowType::dir_t);
 template <typename T> void analysis(T  obj);
 double getMaxDura();
 double getMaxRate();
-//typedef bool (*Cmp)(FlowType &,FlowType &);
-//void sortPacket(Cmp);
+typedef bool (*PCMP)(FlowType &,FlowType &);
+template<class T>
+void sortPacket(T cmp)
+{
+	std::sort(flowVec.begin(),flowVec.end(),cmp);
+}
 #endif
