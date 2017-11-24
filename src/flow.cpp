@@ -69,6 +69,7 @@ void flowHandler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 }
 void printFlow()
 {
+	FlowType tempFlow;
 	for(auto pskt : skt_map)
 	{
 		SocketStat skt=pskt.first;
@@ -76,6 +77,7 @@ void printFlow()
 		uint32_t prevseq=0;
 		uint32_t flowcnt=0;
 		uint32_t flowsize=0;
+		uint32_t pkt_count=0;
 		timeval start,end,duration;
 		for(auto pkt : pskt.second)
 		{
@@ -95,14 +97,19 @@ void printFlow()
 				FlowType::dir_t dir;
 				if(ISUSR(ntohl(skt.srcip))) dir=FlowType::UPLOAD;
 				else dir=FlowType::DOWNLOAD;
-				if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0) flowVec.push_back(FlowType(skt,flowsize,duration,dir));
-				std::cout<<"Size: "<<flowsize<<" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<std::endl;
+				if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0 && pkt_count>=10) 
+					flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir));
+				std::cout<<"Size: "<<flowsize<<
+					" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<
+					" rate: "<<tempFlow.calRate()<<std::endl;
 				flowsize=0;start=pkt.tv;
+				pkt_count=0;
 			}
 			std::cout<<"\t"<<pkt<<"\n";
 			//REFRESH PREVIOUS 
 			prevseq=pkt.seq;
 			flowsize+=pkt.tot_len;
+			pkt_count++;
 			end=pkt.tv;
 		}
 		//ADD FLOW
@@ -111,8 +118,11 @@ void printFlow()
 		FlowType::dir_t dir;
 		if(ISUSR(ntohl(skt.srcip))) dir=FlowType::UPLOAD;
 		else dir=FlowType::DOWNLOAD;
-		if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0) flowVec.push_back(FlowType(skt,flowsize,duration,dir));
-		std::cout<<"Size: "<<flowsize<<" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<std::endl;
+		if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0 && pkt_count>=10) 
+			flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir));
+		std::cout<<"Size: "<<flowsize<<
+			" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<
+			" rate: "<<tempFlow.calRate()<<std::endl;
 		
 		std::cout<<"==================================="<<std::endl;
 		std::cout<<std::endl;
@@ -164,3 +174,24 @@ void printRate(std::ostream & out,FlowType::dir_t d)
 			out<<flow.calRate()<<std::endl;
 	}
 }
+
+double getMaxDura()
+{
+	double maxDura=0.0;
+	for(auto flow : flowVec)
+		if(flow.calDuration()>maxDura)
+			maxDura=flow.calDuration();
+	return maxDura;
+}
+double getMaxRate()
+{
+	double maxRate=0.0;
+	for(auto flow : flowVec)
+		if(flow.calRate()>maxRate)
+		   maxRate=flow.calRate();
+	return maxRate;
+}
+//void sortPacket(Cmp cmp)
+//{
+//	std::sort(flowVec.begin(),flowVec.end(),cmp);
+//}

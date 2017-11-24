@@ -102,4 +102,9 @@ void printSize(std::ostream&,FlowType::dir_t);
 void printDuration(std::ostream&,FlowType::dir_t);
 void printRate(std::ostream&,FlowType::dir_t);
 //void printAll(std::ostream&,FlowType::dir_t);
+template <typename T> void analysis(T  obj);
+double getMaxDura();
+double getMaxRate();
+//typedef bool (*Cmp)(FlowType &,FlowType &);
+//void sortPacket(Cmp);
 #endif
