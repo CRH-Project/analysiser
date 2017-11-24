@@ -65,7 +65,7 @@ void stat2()
 				pf=&fout_1d;
 			else pf=&fout_10d;
 		}
-		(*pf)<<flow.size<<endl;
+		(*pf)<<flow.calRate()<<endl;
 	}
 
 }
