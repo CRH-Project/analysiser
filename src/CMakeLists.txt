@@ -1,11 +1,12 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(Analysiser-src)
 
-SET(INCLUDES headers.h utils.h spliter.h flow.h
+SET(INCLUDES headers.h utils.h spliter.h flow.h httpTrace.h
+			 roll.h
 	)
 SET(C_SOURCES utils.c spliter.c
 	)
-SET(CXX_SOURCES flow.cpp 
+SET(CXX_SOURCES flow.cpp roll.cpp httpTrace.cpp utils.cpp
 	)
 
 ADD_LIBRARY(c_src_lib STATIC ${C_SOURCES} ${INCLUDES})

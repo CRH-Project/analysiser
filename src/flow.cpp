@@ -98,7 +98,7 @@ void printFlow()
 				if(ISUSR(ntohl(skt.srcip))) dir=FlowType::UPLOAD;
 				else dir=FlowType::DOWNLOAD;
 				if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0 && pkt_count>=10) 
-					flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir));
+					flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir,start.tv_sec));
 				std::cout<<"Size: "<<flowsize<<
 					" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<
 					" rate: "<<tempFlow.calRate()<<std::endl;
@@ -119,7 +119,7 @@ void printFlow()
 		if(ISUSR(ntohl(skt.srcip))) dir=FlowType::UPLOAD;
 		else dir=FlowType::DOWNLOAD;
 		if(flowsize!=0 && duration.tv_usec+duration.tv_sec>0 && pkt_count>=10) 
-			flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir));
+			flowVec.push_back(tempFlow=FlowType(skt,flowsize,duration,dir,start.tv_sec));
 		std::cout<<"Size: "<<flowsize<<
 			" duration (sec:usec): "<<duration.tv_sec<<":"<<duration.tv_usec<<
 			" rate: "<<tempFlow.calRate()<<std::endl;

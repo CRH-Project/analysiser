@@ -21,3 +21,24 @@ const char * itoa(int cnt)
 	const char * ret=buffer+pos;
 	return ret;
 }
+
+int getField(char *dst, const char *src, char *sign) {
+	if(!dst || !src || !sign) return -1;
+
+	int i = 0;
+	char tmp;
+	const char *start = strstr(src, sign);
+	if(!start) return -1;
+
+	start += strlen(sign); // "Content-Type: XXX"
+
+	while(1) {
+		tmp = *start;
+		if(tmp == '\r' || tmp == ';' || tmp == ',' || tmp == '\0')
+			break;
+		dst[i++] = tmp;
+		start++;
+	}
+	dst[i] = '\0';
+	return 0;
+}

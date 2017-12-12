@@ -1,0 +1,2 @@
+(ip.dst == 192.168.14.191 && tcp.srcport == 80  && ip.src == 27.221.99.45) || (ip.src == 192.168.14.191 && tcp.dstport == 80 && ip.dst == 27.221.99.45) 
+have "no_headed http transmission"

@@ -48,6 +48,7 @@ public:
 	SocketStat st;
 	uint32_t size;
 	timeval tv;
+	time_t start;
 	enum dir_t{UPLOAD,DOWNLOAD}direction;
 	FlowType():st(),size(0)
 	{tv.tv_sec=0;tv.tv_usec=0;direction=DOWNLOAD;}
@@ -56,6 +57,10 @@ public:
 	{
 		tv.tv_sec=t.tv_sec;
 		tv.tv_usec=t.tv_usec;
+	}
+	FlowType(const SocketStat & s,uint32_t si,timeval t,enum dir_t d,time_t star):FlowType(s,si,t,d)
+	{
+		start = star;
 	}
 	double calRate()
 	{
