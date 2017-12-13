@@ -68,7 +68,7 @@ inline void flush()
 		std::cout<<"(before,after) : ("<<before<<","<<after<<")"<<std::endl;
 	for(auto tgt : targetSet)
 	{
-		//std::cout<<"removing..."<<std::endl;
+		//std::cout<<"counting targetType "<<tgt.type<<"..."<<std::endl;
 		std::remove_if(buffer.begin(),buffer.end(),CanAdd(tgt));
 	}
 }
@@ -87,21 +87,27 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 	buffer.push_back(pack);
 	char type[100],len[100];
 	int r,_len;
-	if((r = getField(len, app, "Content-Length: ")) < 0) 
-		return;
-	else 
-		_len = atoi(len);
-	//We have length now, we should have type in this packet;
+	//We want to have type for content shooter packet;
 	if((r = getField(type, app, "Content-Type: ")) < 0)
 	   	return;
-	else				//contains Content-Type field
-	{
-		int st = pack.seq, en = pack.seq + _len; 
-		targetSet.insert(TargetShooter(
+	else
+	{				//contains Content-Type field
+		if((r = getField(len, app, "Content-Length: ")) < 0) 
+		{
+			//if we don't get content length, we will assume it has only 1 packet for it's type
+			contentSize[type]+=pack.tot_len;
+		}
+		else
+		{
+			//we got expected length of the object, Expected Seq gap can be calculated...
+			_len = atoi(len);
+			int st = pack.seq, en = pack.seq + _len; 
+			targetSet.insert(TargetShooter(
 					Channel(pack.ch),st,en,
 					std::string(type),TargetShooter::DOWNLINK)
 				);
 		//flush();
+		}
 	}
 	return;
 }
@@ -148,8 +154,11 @@ void print()
 	std::cout<<"total packets : "<<total<<std::endl;
 	std::cout<<"targetSet size : "<<targetSet.size()
 		<<" buffer size : "<<buffer.size()<<std::endl;
+	long long total=0;
 	for(auto e : contentSize)
 	{
 		std::cout<<e.first<<" : "<<e.second<<std::endl;
+		total+=e.second;
 	}
+	std::cout<<"Total size : "<<total<<std::endl;
 }
