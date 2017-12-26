@@ -1,5 +1,6 @@
 #include "httpTrace.h"
 #include "utils.h"
+#include <vector>
 #include <list>
 #include <map>
 #include <set>
@@ -21,6 +22,7 @@ static std::map<std::string,int> contentSize;
  */
 static std::set<TargetShooter> targetSet;
 
+
 class CanAdd
 {
 	public:
@@ -33,6 +35,7 @@ class CanAdd
 				ts.size+=htp.tot_len;
 				contentSize[ts.type]+=htp.tot_len;
 //				std::cout<<contentSize.size()<<std::endl;
+				
 				return true;
 			}
 			else return false;
@@ -128,6 +131,7 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 	uint32_t srcip = ntohl(net->srcip), srcport = ntohs(trans->srcport),
 			dstip = ntohl(net->dstip), dstport = ntohs(trans->dstport);
 	uint32_t seq = ntohl(trans->seq), tot_len = ntohs(net->tot_len);
+	
 	//Use the length of http payload
 	tot_len = tot_len - net->ihl*4 - trans->doff*4;		
 
@@ -137,7 +141,7 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 		return;
 
 	//must be http then...
-	HttpPacket pack(Channel(srcip,dstip),seq,tot_len);
+	HttpPacket pack(Channel(srcip,dstip,srcport,dstport),seq,tot_len);
 	if(ISHTTP(srcport))			// download > respond
 	{
 		dealDownlink(app,pack);

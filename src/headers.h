@@ -4,7 +4,7 @@
 #include <pcap/pcap.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
-//#include <bits/endian.h>
+#include <bits/endian.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
