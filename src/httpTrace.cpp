@@ -1,10 +1,14 @@
 #include "httpTrace.h"
 #include "utils.h"
+#include <locale>
 #include <vector>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <list>
 #include <map>
 #include <set>
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 
 #define LOG_TIMES 100000
@@ -22,6 +26,11 @@ static std::map<std::string,int> contentSize;
  */
 static std::set<TargetShooter> targetSet;
 
+/*
+ * Mapping content-type to flow size
+ */
+static std::map<std::string, std::vector<int> > flowPerContent;
+
 
 class CanAdd
 {
@@ -30,12 +39,14 @@ class CanAdd
 		CanAdd(TargetShooter & t):ts(t){}
 		bool operator()(const HttpPacket & htp)
 		{
-			if(htp.seq>ts.start && htp.seq<=ts.end)	//true!
+			if(htp.seq>ts.start && htp.seq<=ts.end 
+					&& htp.tot_len>0)	//true!
 			{
 				ts.size+=htp.tot_len;
 				contentSize[ts.type]+=htp.tot_len;
 //				std::cout<<contentSize.size()<<std::endl;
-				
+				int & i = flowPerContent[ts.type].back();
+				i+=htp.tot_len;
 				return true;
 			}
 			else return false;
@@ -63,17 +74,28 @@ struct CleanTarget
  */
 inline void flush()
 {
-	int before,after;
-	before=targetSet.size();
-	std::remove_if(targetSet.begin(),targetSet.end(),CleanTarget());
-	after=targetSet.size();
-	if(before<after)
-		std::cout<<"(before,after) : ("<<before<<","<<after<<")"<<std::endl;
+	//int before,after;
+	
+	//before=targetSet.size();
+	//std::remove_if(targetSet.begin(),targetSet.end(),CleanTarget());
+	//after=targetSet.size();
+	//if(before<after)
+	//	std::cout<<"(before,after) : ("<<before<<","<<after<<")"<<std::endl;
+	
+	
 	for(auto tgt : targetSet)
 	{
 		//std::cout<<"counting targetType "<<tgt.type<<"..."<<std::endl;
+		flowPerContent[tgt.type].push_back(0);
 		std::remove_if(buffer.begin(),buffer.end(),CanAdd(tgt));
+		if(flowPerContent[tgt.type].back() == 0)
+			flowPerContent[tgt.type].pop_back();
 	}
+
+/*	for(auto tgt : targetSet)
+	{
+		flowPerContent[tgt.type].push_back(tgt.size);
+	}*/
 }
 
 /*
@@ -99,11 +121,16 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 		{
 			//if we don't get content length, we will assume it has only 1 packet for it's type
 			contentSize[type]+=pack.tot_len;
+			if(pack.tot_len != 0)
+				flowPerContent[type].push_back(pack.tot_len);
 		}
 		else
 		{
 			//we got expected length of the object, Expected Seq gap can be calculated...
 			_len = atoi(len);
+			std::string s(type);
+			using namespace std;
+			std::transform(s.begin(),s.end(),s.begin(),::tolower);
 			int st = pack.seq, en = pack.seq + _len; 
 			targetSet.insert(TargetShooter(
 					Channel(pack.ch),st,en,
@@ -141,7 +168,7 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 		return;
 
 	//must be http then...
-	HttpPacket pack(Channel(srcip,dstip,srcport,dstport),seq,tot_len);
+	HttpPacket pack(Channel(srcip,dstip),seq,tot_len);
 	if(ISHTTP(srcport))			// download > respond
 	{
 		dealDownlink(app,pack);
@@ -152,9 +179,8 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 	}
 }
 
-void print()
+void printBaiscInfo()
 {
-	flush();
 	std::cout<<"total packets : "<<total<<std::endl;
 	std::cout<<"targetSet size : "<<targetSet.size()
 		<<" buffer size : "<<buffer.size()<<std::endl;
@@ -165,4 +191,49 @@ void print()
 		total+=e.second;
 	}
 	std::cout<<"Total size : "<<total<<std::endl;
+}
+
+void printFlowPerContent()
+{
+	std::string prefix = "flow_per_contentTP";
+	mkdir(prefix.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+	prefix+='/';
+
+	std::ofstream fout;
+	for(auto content : flowPerContent)
+	{
+		std::string s2 = content.first;
+		auto pos = s2.find("/");
+		if(pos!=s2.npos)
+		{
+			s2.replace(pos,1,"-");
+		}
+		fout.open(prefix+s2,std::ios::out);
+		if(!fout) std::cerr<<"cannot open output file "
+			<< prefix+s2 <<std::endl;
+
+		std::cerr<<"Content is : "<<content.first<<std::endl;
+		int tot_size = 0;
+		std::cerr<<'\t';
+		for(auto size : content.second)
+		{
+			tot_size += size;
+			fout<<size<<std::endl;
+			std::cerr<<size<<" ";
+		}
+		
+		std::cerr<<std::endl<<"tot size is "<<tot_size
+			<< " And pre total size is "<<contentSize[content.first]<<std::endl;
+		fout.close();
+	}
+}
+
+void print()
+{
+	std::cerr<<"flushing..."<<std::endl;
+	flush();
+	std::cerr<<"Flush finished! Basic Info Following"<<std::endl;
+	printBaiscInfo();
+	std::cerr<<"Printing flowsize per content-type"<<std::endl;
+	printFlowPerContent();
 }

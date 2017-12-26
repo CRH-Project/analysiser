@@ -8,30 +8,31 @@
  * store (src,dst) tuple, seq number, length, and some tags
  */
 #include <cstdint>
-//struct Channel
-//{
-//	uint32_t srcip,dstip;
+struct Channel
+{
+	uint32_t srcip,dstip;
 	//Constructor
-//	Channel(uint32_t src=0,uint32_t dst=0):srcip(src),dstip(dst){}
-//};
-typedef SocketStat Channel;
+	Channel(uint32_t src=0,uint32_t dst=0):srcip(src),dstip(dst){}
+};
+//typedef SocketStat Channel;
 inline bool operator==(const Channel & l, const Channel & r)
 {
 	return (l.srcip==r.srcip && l.dstip==r.dstip)
-		&& (l.srcport==r.srcport && l.dstport==r.dstport);
+		//&& (l.srcport==r.srcport && l.dstport==r.dstport)
+		;
 }
 inline bool operator<(const Channel & l, const Channel & r)
 {
 	if(l.srcip == r.srcip)
 	{
-		if(l.dstip == r.dstip)
+		/*if(l.dstip == r.dstip)
 		{
 			if(l.srcport == r.srcport)
 			{
 				return l.dstport<r.dstport;
 			}
 			return l.srcport<r.srcport;
-		}
+		}*/
 		return l.dstip<r.dstip;
 	}
 	return l.srcip<r.srcip;
