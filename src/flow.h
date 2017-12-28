@@ -107,6 +107,7 @@ struct timeval operator-(const timeval & l,const timeval & r);
 std::ostream & operator<<(std::ostream & o, PacketInfo & p);
 int runFlow(char * fileName);
 
+void printPerHour(std::string prefix);
 void printSize(std::ostream&,FlowType::dir_t);
 void printDuration(std::ostream&,FlowType::dir_t);
 void printRate(std::ostream&,FlowType::dir_t);

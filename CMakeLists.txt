@@ -21,5 +21,9 @@ ADD_EXECUTABLE(tcpflow tcpflow.c)
 TARGET_LINK_LIBRARIES(tcpflow ${PCAP})
 ADD_EXECUTABLE(http http.cpp)
 TARGET_LINK_LIBRARIES(http cxx_src_lib ${PCAP})
+ADD_EXECUTABLE(split split.cpp)
+TARGET_LINK_LIBRARIES(split c_src_lib cxx_src_lib ${PCAP})
 
-INSTALL(TARGETS unpcap main tcpflow http DESTINATION bin)
+INSTALL(TARGETS 
+			unpcap main tcpflow http split
+		DESTINATION bin)

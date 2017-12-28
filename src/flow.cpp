@@ -1,7 +1,11 @@
 #include "flow.h"
+#include "domain_stat.h"
+#include "dns_trace.h"
+#include "roll.h"
 #include "headers.h"
 #include <pcap/pcap.h>
 #include <cassert>
+#include <fstream>
 #include <stdio.h>
 #include <algorithm>
 #include <iostream>
@@ -10,8 +14,20 @@
 #include <set>
 #include <string>
 #define ISUSR(ip) (((ip) & 0xffff0000) == 0xc0a80000 && ((ip)!=0xc0a80a01) && ((ip)!=0xc0a80a02))
+#define ISHTTPS(port)	((port) == 443)
+#define ISHTTP(port)	((port) == 80)
+#define MAXHOUR		20
+
 std::map<SocketStat,std::set<PacketInfo>,Less> skt_map;
 std::vector<FlowType> flowVec;
+std::map<uint32_t, DomainStat> httpsMap,httpMap;
+typedef std::map<uint32_t, DomainStat> _MAP_T;
+std::vector<DomainStat> httpsVec,httpVec;
+typedef std::vector<DomainStat> _VEC_T;
+std::vector<FlowType>  flowPerHour[MAXHOUR];
+int flowNumPerHour[MAXHOUR];
+struct timeval beginTime;
+
 bool operator<(const struct timeval & l, const struct timeval & r){
 	if(l.tv_sec == r.tv_sec) return l.tv_usec<r.tv_usec;
 	return l.tv_sec<r.tv_sec;
@@ -65,8 +81,10 @@ void flowHandler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 	_len = _len - 4*net->ihl -4*trans->doff;
 	SocketStat skt(net->srcip,net->dstip,ntohs(trans->srcport),ntohs(trans->dstport));
 	PacketInfo pkt_info(_len,ntohl(trans->seq),h->ts);
+	if(total == 1) beginTime = pkt_info.tv;
 	skt_map[skt].insert(pkt_info);
 }
+
 void printFlow()
 {
 	FlowType tempFlow;
@@ -128,8 +146,67 @@ void printFlow()
 		std::cout<<std::endl;
 	}
 }
+
+bool is_https(int port){return ISHTTPS(port);}
+bool is_http(int port){return ISHTTP(port);}
+void getVec(_MAP_T & Map, _VEC_T &Vec, bool (*cmp)(int))
+{
+	for(auto flow : flowVec)
+	{
+		int ip;
+		if(cmp(flow.st.srcport)) 
+		{
+			ip = flow.st.srcip;
+		}
+		else if(cmp(flow.st.dstport))
+		{
+			ip = flow.st.dstip;
+			continue;
+		}
+		else continue;
+		ip = ntohl(ip);
+
+		auto & dms = Map[ip];
+		dms.ip = ip;
+		dms.hit_times ++;
+		dms.flowSize.push_back(flow.size);
+	}
+	
+	for(auto ent : httpsMap)
+	{
+		Vec.push_back(ent.second);
+	}
+	std::sort(Vec.begin(),Vec.end(),MoreHit());
+}
+int getFlowPerHouw()
+{
+	bzero(flowNumPerHour,sizeof flowNumPerHour);
+	std::cerr<<"start time is "<<ctime(&beginTime.tv_sec)<<std::endl;
+	for(auto flow : flowVec)
+	{
+		int h = flow.start - beginTime.tv_sec;
+		int ind = h/3600;
+		if(ind>=0 && ind<MAXHOUR)
+		{
+			flowPerHour[ind].push_back(flow);
+			flowNumPerHour[ind]++;
+		}
+		else 
+		{
+			fprintf(stderr,"time error, very begin = %ld, flow begin = %ld\n",
+					beginTime.tv_sec, flow.start);
+		}
+	}
+	for(int i=0;i<MAXHOUR;i++)
+		if(flowNumPerHour[i]!=0)
+		{
+			std::cerr<<i<<" th hour : "<<flowNumPerHour[i]<<std::endl;
+		}
+}
+
 int runFlow(char * fileName)
 {
+	roll(fileName, dns_roller);
 	FILE * f=fopen(fileName,"r");
 	if(!f)
 	{
@@ -141,11 +218,14 @@ int runFlow(char * fileName)
 	pcap_loop(pcap,0,flowHandler,err);
 	fclose(f);
 	printFlow();
-	for(auto flow : flowVec)
-	{
-		flow.print(std::cout);
-		std::cout<<std::endl;
-	}
+	getVec(httpsMap,httpsVec,is_https);
+	getVec(httpMap,httpVec,is_http);
+	getFlowPerHouw();
+//	for(auto flow : flowVec)
+//	{
+//		flow.print(std::cout);
+//		std::cout<<std::endl;
+//	}
 	return 0;
 }	
 
@@ -191,3 +271,26 @@ double getMaxRate()
 		   maxRate=flow.calRate();
 	return maxRate;
 }
+
+
+void printPerHour(std::string prefix)
+{
+	std::ofstream fout,fout2;
+	fout.open(prefix+"number_per_hour.txt",
+			std::ios::out);
+	fout2.open(prefix+"throughput_per_hour.txt",
+			std::ios::out);
+	for(int i=0;i<MAXHOUR && flowNumPerHour[i];i++)
+	{
+		fout<<flowNumPerHour[i]<<std::endl;
+		int th = 0;
+		for(auto size : flowPerHour[i])
+		{
+			th = size.size;
+		}
+		fout2<<th<<std::endl;
+	}
+	fout.close();
+	fout2.close();
+}
+

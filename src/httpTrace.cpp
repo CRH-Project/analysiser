@@ -1,4 +1,5 @@
 #include "httpTrace.h"
+#include "domain_stat.h"
 #include "utils.h"
 #include <locale>
 #include <vector>
@@ -31,18 +32,31 @@ static std::set<TargetShooter> targetSet;
  */
 static std::map<std::string, std::vector<int> > flowPerContent;
 
+/*
+ * TargetShooter array with size
+ */
+static std::vector<TargetShooterS> tgtArrayS;
+
+/*
+ * Domain statistics, map from ip to stat
+ */
+static std::map<uint32_t,DomainStat> domainStat;
+static std::vector<DomainStat> domainArray;
 
 class CanAdd
 {
 	public:
-		TargetShooter & ts;
-		CanAdd(TargetShooter & t):ts(t){}
+		const TargetShooter & ts;
+		TargetShooterS & tgts;
+		CanAdd(const TargetShooter & t, TargetShooterS & s)
+			:ts(t),tgts(s)
+		{}
 		bool operator()(const HttpPacket & htp)
 		{
 			if(htp.seq>ts.start && htp.seq<=ts.end 
 					&& htp.tot_len>0)	//true!
 			{
-				ts.size+=htp.tot_len;
+				tgts.size += htp.tot_len;
 				contentSize[ts.type]+=htp.tot_len;
 //				std::cout<<contentSize.size()<<std::endl;
 				int & i = flowPerContent[ts.type].back();
@@ -64,7 +78,7 @@ struct CleanTarget
 	const int THRESHOLD = 0;
 	bool operator()(const TargetShooter & t)
 	{
-		return t.end-t.start <= t.size+THRESHOLD;
+		return false;
 	}
 };
 /*
@@ -74,28 +88,38 @@ struct CleanTarget
  */
 inline void flush()
 {
-	//int before,after;
-	
-	//before=targetSet.size();
-	//std::remove_if(targetSet.begin(),targetSet.end(),CleanTarget());
-	//after=targetSet.size();
-	//if(before<after)
-	//	std::cout<<"(before,after) : ("<<before<<","<<after<<")"<<std::endl;
-	
-	
+	int tot_flows = 0;
 	for(auto tgt : targetSet)
 	{
-		//std::cout<<"counting targetType "<<tgt.type<<"..."<<std::endl;
+		tgtArrayS.push_back(TargetShooterS(tgt.ch,0));
 		flowPerContent[tgt.type].push_back(0);
-		std::remove_if(buffer.begin(),buffer.end(),CanAdd(tgt));
+		std::remove_if(buffer.begin(),buffer.end(),
+				CanAdd(tgt,tgtArrayS.back()));
 		if(flowPerContent[tgt.type].back() == 0)
 			flowPerContent[tgt.type].pop_back();
+		else tot_flows++;
+		if(tgtArrayS.back().size == 0)
+			tgtArrayS.pop_back();
 	}
 
-/*	for(auto tgt : targetSet)
+	std::cerr<<"Flow count : "<<tgtArrayS.size()<<std::endl;
+	for(auto tgts : tgtArrayS)
 	{
-		flowPerContent[tgt.type].push_back(tgt.size);
-	}*/
+		auto & dms = domainStat[tgts.ch.srcip];
+		dms.ip = tgts.ch.srcip;
+		dms.hit_times++;
+		dms.flowSize.push_back(tgts.size);
+	
+	}
+
+	std::cerr<<"sorting domains by hit times..."<<std::endl;
+	for(auto ent : domainStat)
+	{
+		domainArray.push_back(ent.second);
+	}
+	domainStat.clear();
+	std::cerr<<"domain array size :"<<domainArray.size()<<std::endl;
+	std::sort(domainArray.begin(),domainArray.end(),MoreHit());
 }
 
 /*
@@ -117,24 +141,36 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 	   	return;
 	else
 	{				//contains Content-Type field
+		std::string type_s(type);
+		std::transform(type_s.begin(),type_s.end(),
+					type_s.begin(),::tolower);
+
 		if((r = getField(len, app, "Content-Length: ")) < 0) 
 		{
 			//if we don't get content length, we will assume it has only 1 packet for it's type
-			contentSize[type]+=pack.tot_len;
+			contentSize[type_s]+=pack.tot_len;
 			if(pack.tot_len != 0)
-				flowPerContent[type].push_back(pack.tot_len);
+			{
+				flowPerContent[type_s].push_back(pack.tot_len);
+				int st = pack.seq, en = pack.seq + _len; 
+				TargetShooter temp(
+						Channel(pack.ch),st,en,
+						std::string(type_s),TargetShooter::DOWNLINK);
+				tgtArrayS.push_back(TargetShooterS(
+										pack.ch,pack.tot_len)
+						);
+			}
+
 		}
 		else
 		{
 			//we got expected length of the object, Expected Seq gap can be calculated...
 			_len = atoi(len);
-			std::string s(type);
 			using namespace std;
-			std::transform(s.begin(),s.end(),s.begin(),::tolower);
 			int st = pack.seq, en = pack.seq + _len; 
 			targetSet.insert(TargetShooter(
 					Channel(pack.ch),st,en,
-					std::string(type),TargetShooter::DOWNLINK)
+					std::string(type_s),TargetShooter::DOWNLINK)
 				);
 		//flush();
 		}
@@ -200,6 +236,7 @@ void printFlowPerContent()
 	prefix+='/';
 
 	std::ofstream fout;
+	int tot_flows = 0;
 	for(auto content : flowPerContent)
 	{
 		std::string s2 = content.first;
@@ -212,18 +249,35 @@ void printFlowPerContent()
 		if(!fout) std::cerr<<"cannot open output file "
 			<< prefix+s2 <<std::endl;
 
-		std::cerr<<"Content is : "<<content.first<<std::endl;
-		int tot_size = 0;
+		std::cerr<<"Content is : "<<content.first;
+		int flow_size = 0;
 		std::cerr<<'\t';
 		for(auto size : content.second)
 		{
-			tot_size += size;
+			flow_size ++;
 			fout<<size<<std::endl;
-			std::cerr<<size<<" ";
+			//std::cerr<<size<<" ";
 		}
-		
-		std::cerr<<std::endl<<"tot size is "<<tot_size
-			<< " And pre total size is "<<contentSize[content.first]<<std::endl;
+		tot_flows += flow_size;
+		std::cerr<<"flow cnt is "<<flow_size<<std::endl;
+		fout.close();
+	}
+	std::cerr<<"total flow count is "<<tot_flows<<std::endl;
+}
+
+void printDomainStat()
+{
+	const int N = 20;
+	int len = (N<domainArray.size()?N:domainArray.size());
+	std::string pre = "domain_stat/";
+	int a=mkdir(pre.c_str(), S_IRWXG | S_IRWXO | S_IRWXU);
+	std::ofstream fout;
+	for(int i=0;i<len;i++)
+	{
+		std::cout<<domainArray[i].getBasicInfo()<<std::endl;
+		fout.open(pre+"rank "+std::to_string(i)+".txt",
+				std::ios::out);
+		domainArray[i].printToFile(fout);
 		fout.close();
 	}
 }
@@ -236,4 +290,6 @@ void print()
 	printBaiscInfo();
 	std::cerr<<"Printing flowsize per content-type"<<std::endl;
 	printFlowPerContent();
+	std::cerr<<"Printing domain info"<<std::endl;
+	printDomainStat();
 }

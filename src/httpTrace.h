@@ -3,6 +3,7 @@
 
 #include "headers.h"
 #include "flow.h"
+#include "dns_trace.h"
 /*
  * STRUCT HttpPacket
  * store (src,dst) tuple, seq number, length, and some tags
@@ -49,8 +50,10 @@ struct HttpPacket
 	HttpPacket():ch(),seq(0),tot_len(0),taged(false)
 	{
 	}
-	HttpPacket(const Channel & c, uint32_t s, uint32_t tl):ch(c)
+	HttpPacket(const Channel & c, uint32_t s, uint32_t tl)
 	{
+		this->ch.srcip = c.srcip;
+		this->ch.dstip = c.dstip;
 		this->taged=false;
 		this->seq=s;
 		this->tot_len=tl;
@@ -67,7 +70,6 @@ struct TargetShooter
 {
 	Channel ch;
 	uint32_t start,end;		//seq start and seq end
-	uint32_t size;
 	std::string type;
 	enum Dir_t {UPLINK,DOWNLINK} direction;
 
@@ -76,8 +78,10 @@ struct TargetShooter
 	{
 		start=end=0;
 	}
-	TargetShooter(const Channel & c,uint32_t s,uint32_t e,std::string ty,Dir_t dir):ch(c)
+	TargetShooter(const Channel & c,uint32_t s,uint32_t e,std::string ty,Dir_t dir)
 	{
+		this->ch.srcip = c.srcip;
+		this->ch.dstip = c.dstip;
 		start=s;end=e;
 		type=ty;
 		direction=dir;
@@ -86,14 +90,13 @@ struct TargetShooter
 	{
 		this->ch=t.ch;
 		this->start=t.start;this->end=t.end;
-		this->size=t.size;this->type=t.type;
+		this->type=t.type;
 		this->direction=t.direction;
 		return *this;
 	}
 	TargetShooter operator=(const TargetShooter & t) const
 	{
 		TargetShooter ret(t.ch,t.start,t.end,t.type,t.direction);
-		ret.size=t.size;
 		return ret;
 	}
 };
@@ -107,6 +110,16 @@ inline bool operator<(const TargetShooter & l, const TargetShooter & r)
 	return l.ch<r.ch;
 }
 //inline bool operator==(const TargetShooter & l,
+
+struct TargetShooterS
+{
+	const Channel ch;
+	int size;
+	TargetShooterS(const Channel & l,int size = 0):ch(l)
+	{
+		this->size = size;
+	}
+};
 
 /*
  * FUNCTION -- PCAP_HANDLER

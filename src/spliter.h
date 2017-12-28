@@ -26,7 +26,15 @@ struct my_pcap_pkthdr
 // @return:
 //
 // @author: Yihua
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 int split(const char * fileName, int rec_num,const char * prefix);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

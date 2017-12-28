@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/aposta/projects/network/CRH/analysiser/tcpflow.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+math.h
+-
+stdint.h
+-
+sys/types.h
+-
+

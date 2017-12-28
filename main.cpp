@@ -1,4 +1,7 @@
 #include "spliter.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include "domain_stat.h"
 #include "flow.h"
 #include "utils.h"
 #include <string.h>
@@ -16,6 +19,8 @@ bool sortBySize(FlowType & l, FlowType & r)
 }
 string s;
 extern vector<FlowType> flowVec;
+extern vector<DomainStat> httpsVec;
+extern vector<DomainStat> httpVec;
 
 //PRINT THE BASIC INFORMATION OF FLOW...
 void stat1()
@@ -98,8 +103,47 @@ void stat3()
 	for(int i=0;i<2;i++) fouts[i].close();
 }
 
-#include <sys/stat.h>
-#include <sys/types.h>
+void httpsStat()
+{
+	const int N = 15;
+	fprintf(stderr,"HttpS data\n");
+	int m = (N<httpsVec.size()?N:httpsVec.size());
+	string s2 = s+"https/";
+	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+	ofstream fout;
+	for(int i=0;i<m;i++)
+	{
+		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
+		std::cerr<<httpsVec[i].getBasicInfo()<<std::endl;
+		httpVec[i].printToFile(fout);
+		fout.close();
+	}
+}
+
+void flowPerHour()
+{
+	string s2 = s+"per_hour/";
+	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+	std::cerr<<strerror(errno)<<" in flowPerHour"<<std::endl;
+	printPerHour(s2);
+}
+void httpStat()
+{
+	const int N = 15;
+	fprintf(stderr,"Http data\n");
+	int m = (N<httpVec.size()?N:httpVec.size());
+	string s2 = s+"http/";
+	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+	ofstream fout;
+	for(int i=0;i<m;i++)
+	{
+		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
+		std::cerr<<httpVec[i].getBasicInfo()<<std::endl;
+		httpVec[i].printToFile(fout);
+		fout.close();
+	}
+}
+
 int main(int argc, char * argv[])
 {
 	//test for split
@@ -117,5 +161,8 @@ int main(int argc, char * argv[])
 	stat1();
 	stat2();
 	stat3();
+	httpsStat();
+	httpStat();
+	flowPerHour();
 	return 0;
 }

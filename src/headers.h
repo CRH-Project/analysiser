@@ -26,15 +26,17 @@
 	#error "Please fix <bits/endian.h>"
 #endif
 // Ethernet header format
-struct Ethernet
+struct Ethernet_t
 {
 	uint8_t dstmac[6];
 	uint8_t srcmac[6];
 	uint16_t type;	// upper layer protocol
 }__attribute__((packed));
 
+#define Ethernet Ethernet_t
+
 // IPv4 header format
-struct Ipv4
+struct Ipv4_t
 { 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	unsigned int ihl:4;	// Internet header length
@@ -68,8 +70,12 @@ struct Ipv4
 	/*The options start here. */ 
 }__attribute__((packed));
 
+#define Ipv4 Ipv4_t
+
+
+
 // TCP header format
-struct Tcp
+struct Tcp_t
 { 
 	uint16_t srcport;
 	uint16_t dstport;
@@ -109,4 +115,15 @@ struct Tcp
 	uint16_t urgptr;
 }__attribute__((packed));
 
+#define Tcp Tcp_t
+
+/**
+ * UDP HEADER
+ */
+struct Udp_t{
+	uint16_t srcport;
+	uint16_t dstport;
+	uint16_t tot_len;
+	uint16_t checksum;
+};
 #endif
