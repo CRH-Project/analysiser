@@ -10,7 +10,7 @@
 /*=====================*/
 
 static int total = 0;
-static int LOG_TIMES = 10000;
+static int LOG_TIMES = 1000000;
 /**
  * data map for dns answers.
  * map ipaddr (HOST ENDIAN) to url
