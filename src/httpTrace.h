@@ -135,4 +135,11 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
  */
 void print();
 
+/*
+ * FUNCTION setPrefix(s)
+ *
+ * set the file prefix
+ */
+void setPrefix(std::string & s);
+
 #endif

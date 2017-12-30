@@ -12,8 +12,10 @@
 #include <fstream>
 #include <iostream>
 
-#define LOG_TIMES 100000
+#define LOG_TIMES 1000000
 #define ISHTTP(port) ((port) == 80)
+
+std::string prefix;
 /*
  * Store the unflushed http packets
  */
@@ -180,7 +182,7 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 static size_t total;
 void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt)
 {
-	if(total % LOG_TIMES == 0) std::cout<<total<<"packets done"<<std::endl; 
+	if(total % LOG_TIMES == 0) std::cerr<<total<<"packets done"<<std::endl; 
 	total++;
 	const struct Ethernet *link = (struct Ethernet *)pkt;
 //	printf("eth type is: %x\n",link->type);
@@ -217,23 +219,23 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 
 void printBaiscInfo()
 {
-	std::cout<<"total packets : "<<total<<std::endl;
-	std::cout<<"targetSet size : "<<targetSet.size()
-		<<" buffer size : "<<buffer.size()<<std::endl;
+	std::cout<<"total packets ,"<<total<<std::endl;
+	std::cout<<"targetSet size ,"<<targetSet.size()
+		<<" buffer size ,"<<buffer.size()<<std::endl;
 	long long total=0;
 	for(auto e : contentSize)
 	{
-		std::cout<<e.first<<" : "<<e.second<<std::endl;
+		std::cout<<e.first<<" ,"<<e.second<<std::endl;
 		total+=e.second;
 	}
-	std::cout<<"Total size : "<<total<<std::endl;
+	std::cout<<"Total size ,"<<total<<std::endl;
 }
 
 void printFlowPerContent()
 {
-	std::string prefix = "flow_per_contentTP";
-	mkdir(prefix.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-	prefix+='/';
+	std::string pre = prefix+"flow_per_contentTP";
+	mkdir(pre.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+	pre+='/';
 
 	std::ofstream fout;
 	int tot_flows = 0;
@@ -245,9 +247,9 @@ void printFlowPerContent()
 		{
 			s2.replace(pos,1,"-");
 		}
-		fout.open(prefix+s2,std::ios::out);
+		fout.open(pre+s2,std::ios::out);
 		if(!fout) std::cerr<<"cannot open output file "
-			<< prefix+s2 <<std::endl;
+			<< pre+s2 <<std::endl;
 
 		std::cerr<<"Content is : "<<content.first;
 		int flow_size = 0;
@@ -269,12 +271,12 @@ void printDomainStat()
 {
 	const int N = 20;
 	int len = (N<domainArray.size()?N:domainArray.size());
-	std::string pre = "domain_stat/";
+	std::string pre = prefix+"domain_stat/";
 	int a=mkdir(pre.c_str(), S_IRWXG | S_IRWXO | S_IRWXU);
 	std::ofstream fout;
 	for(int i=0;i<len;i++)
 	{
-		std::cout<<domainArray[i].getBasicInfo()<<std::endl;
+		std::cerr<<domainArray[i].getBasicInfo()<<std::endl;
 		fout.open(pre+"rank "+std::to_string(i)+".txt",
 				std::ios::out);
 		domainArray[i].printToFile(fout);
@@ -292,4 +294,10 @@ void print()
 	printFlowPerContent();
 	std::cerr<<"Printing domain info"<<std::endl;
 	printDomainStat();
+}
+
+void setPrefix(std::string &s)
+{
+	prefix = s;
+	mkdir(prefix.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 }
