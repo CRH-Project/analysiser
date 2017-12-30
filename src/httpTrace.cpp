@@ -219,16 +219,18 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 
 void printBaiscInfo()
 {
-	std::cout<<"total packets ,"<<total<<std::endl;
-	std::cout<<"targetSet size ,"<<targetSet.size()
+	std::ofstream fout;
+	fout.open(prefix + "getBasicInfo.csv",std::ios::out);
+	fout<<"total packets ,"<<total<<std::endl;
+	fout<<"targetSet size ,"<<targetSet.size()
 		<<" buffer size ,"<<buffer.size()<<std::endl;
 	long long total=0;
 	for(auto e : contentSize)
 	{
-		std::cout<<e.first<<" ,"<<e.second<<std::endl;
+		fout<<e.first<<" ,"<<e.second<<std::endl;
 		total+=e.second;
 	}
-	std::cout<<"Total size ,"<<total<<std::endl;
+	fout<<"Total size ,"<<total<<std::endl;
 }
 
 void printFlowPerContent()
