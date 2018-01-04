@@ -183,10 +183,12 @@ int getFlowPerHouw()
 {
 	bzero(flowNumPerHour,sizeof flowNumPerHour);
 	std::cerr<<"start time is "<<ctime(&beginTime.tv_sec)<<std::endl;
+	int stt = beginTime.tv_sec / 3600;
 	for(auto flow : flowVec)
 	{
-		int h = flow.start - beginTime.tv_sec;
-		int ind = h/3600;
+		//int h = flow.start - beginTime.tv_sec;
+		//int ind = h/3600;
+		int ind = flow.start / 3600 - stt;
 		if(ind>=0 && ind<MAXHOUR)
 		{
 			flowPerHour[ind].push_back(flow);
