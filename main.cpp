@@ -111,12 +111,17 @@ void httpsStat()
 	string s2 = s+"https/";
 	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
 	ofstream fout;
+	ofstream foutBrief(s2+"brief.txt",std::ios::out);
 	for(int i=0;i<m;i++)
 	{
 		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
 		std::cerr<<httpsVec[i].getBasicInfo()<<std::endl;
 		httpVec[i].printToFile(fout);
 		fout.close();
+	}
+	for(auto ent : httpsVec)
+	{
+		foutBrief<<ent.getBasicInfo()<<std::endl;
 	}
 }
 
@@ -134,13 +139,18 @@ void httpStat()
 	int m = (N<httpVec.size()?N:httpVec.size());
 	string s2 = s+"http/";
 	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
-	ofstream fout;
+	ofstream fout,foutBrief;
+	foutBrief.open(s2+"brief.txt",std::ios::out);
 	for(int i=0;i<m;i++)
 	{
 		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
 		std::cerr<<httpVec[i].getBasicInfo()<<std::endl;
 		httpVec[i].printToFile(fout);
 		fout.close();
+	}
+	for(auto ent : httpVec)
+	{
+		foutBrief<<ent.getBasicInfo()<<std::endl;
 	}
 }
 
@@ -152,8 +162,8 @@ int main(int argc, char * argv[])
 	runFlow(argv[1]);	
 	s=string(argv[1]);
 	s=s.substr(0,s.find("."));
+	s+="-anal/";
 	int a=mkdir(s.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
-	s+="/";
 	cout<<"max rate: "<<getMaxRate()<<endl
 		<<"max duration: "<<getMaxDura()<<endl;
 	//sortPacket(sortBySize);

@@ -140,6 +140,6 @@ void print();
  *
  * set the file prefix
  */
-void setPrefix(std::string & s);
+void setPrefix(const std::string & s);
 
 #endif

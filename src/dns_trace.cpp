@@ -165,6 +165,11 @@ void dns_roller(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 
 std::string findAddr(int ip)
 {
+	if(dnsData.size() == 0)
+	{
+		fprintf(stderr,"No dns data found! call dns_roller() first!\n");
+		exit(-1);
+	}
 	if(dnsData.count(ip))
 		return dnsData[ip];
 	else return "Addr not found";

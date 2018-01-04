@@ -20,8 +20,8 @@
 
 std::map<SocketStat,std::set<PacketInfo>,Less> skt_map;
 std::vector<FlowType> flowVec;
-std::map<uint32_t, DomainStat> httpsMap,httpMap;
-typedef std::map<uint32_t, DomainStat> _MAP_T;
+std::map<std::string, DomainStat> httpsMap,httpMap;
+typedef std::map<std::string, DomainStat> _MAP_T;
 std::vector<DomainStat> httpsVec,httpVec;
 typedef std::vector<DomainStat> _VEC_T;
 std::vector<FlowType>  flowPerHour[MAXHOUR];
@@ -166,13 +166,14 @@ void getVec(_MAP_T & Map, _VEC_T &Vec, bool (*cmp)(int))
 		else continue;
 		ip = ntohl(ip);
 
-		auto & dms = Map[ip];
+		std::string url = findAddr(ip);
+		auto & dms = Map[url];
 		dms.ip = ip;
 		dms.hit_times ++;
 		dms.flowSize.push_back(flow.size);
 	}
 	
-	for(auto ent : httpsMap)
+	for(auto ent : Map)
 	{
 		Vec.push_back(ent.second);
 	}
@@ -275,20 +276,23 @@ double getMaxRate()
 
 void printPerHour(std::string prefix)
 {
+
 	std::ofstream fout,fout2;
 	fout.open(prefix+"number_per_hour.txt",
 			std::ios::out);
 	fout2.open(prefix+"throughput_per_hour.txt",
 			std::ios::out);
+	fout<<"### starts at "<<ctime(&beginTime.tv_sec)<<std::endl;
+	fout2<<"### starts at "<<ctime(&beginTime.tv_sec)<<std::endl;
 	for(int i=0;i<MAXHOUR && flowNumPerHour[i];i++)
 	{
-		fout<<flowNumPerHour[i]<<std::endl;
+		fout<<flowNumPerHour[i]<< "\t### "<<i<<"th hour"<<std::endl;
 		int th = 0;
 		for(auto size : flowPerHour[i])
 		{
 			th = size.size;
 		}
-		fout2<<th<<std::endl;
+		fout2<<th<< "\t### "<<i<<"th hour"<<std::endl;
 	}
 	fout.close();
 	fout2.close();

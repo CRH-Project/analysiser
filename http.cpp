@@ -10,6 +10,7 @@ int main(int argc,char * argv[])
 		cerr<<"Usage : ./http <filename>"<<endl;
 	}
 	roll(argv[1],dns_roller);
+	setPrefix(string(argv[1])+"-http/");
 	roll(argv[1],http_roller);
 	print();
 	return 0;
