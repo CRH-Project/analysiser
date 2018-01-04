@@ -103,26 +103,29 @@ void stat3()
 	for(int i=0;i<2;i++) fouts[i].close();
 }
 
-void httpsStat()
+
+void HTTPStat(vector<DomainStat> & vec, string folder)
 {
 	const int N = 15;
-	fprintf(stderr,"HttpS data\n");
-	int m = (N<httpsVec.size()?N:httpsVec.size());
-	string s2 = s+"https/";
+	fprintf(stderr,"%s data\n",folder.c_str());
+	int m = (N<vec.size()?N:vec.size());
+	string s2 = s + folder + "/";
 	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
-	ofstream fout;
-	ofstream foutBrief(s2+"brief.txt",std::ios::out);
+	ofstream fout,foutBrief;
+	foutBrief.open(s2+"brief.txt",std::ios::out);
 	for(int i=0;i<m;i++)
 	{
-		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
-		std::cerr<<httpsVec[i].getBasicInfo()<<std::endl;
-		httpVec[i].printToFile(fout);
+		fout.open(s2+folder+"_RANK"+std::to_string(i)+".txt",
+				std::ios::out);
+		std::cerr<<vec[i].getBasicInfo()<<std::endl;
+		vec[i].printToFile(fout);
 		fout.close();
 	}
-	for(auto ent : httpsVec)
+	for(auto end : vec)
 	{
-		foutBrief<<ent.getBasicInfo()<<std::endl;
+		foutBrief<<end.getBasicInfo()<<std::endl;
 	}
+	foutBrief.close();
 }
 
 void flowPerHour()
@@ -131,27 +134,6 @@ void flowPerHour()
 	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
 	std::cerr<<strerror(errno)<<" in flowPerHour"<<std::endl;
 	printPerHour(s2);
-}
-void httpStat()
-{
-	const int N = 15;
-	fprintf(stderr,"Http data\n");
-	int m = (N<httpVec.size()?N:httpVec.size());
-	string s2 = s+"http/";
-	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
-	ofstream fout,foutBrief;
-	foutBrief.open(s2+"brief.txt",std::ios::out);
-	for(int i=0;i<m;i++)
-	{
-		fout.open(s2+"https_RANK "+std::to_string(i)+".txt", std::ios::out);
-		std::cerr<<httpVec[i].getBasicInfo()<<std::endl;
-		httpVec[i].printToFile(fout);
-		fout.close();
-	}
-	for(auto ent : httpVec)
-	{
-		foutBrief<<ent.getBasicInfo()<<std::endl;
-	}
 }
 
 int main(int argc, char * argv[])
@@ -171,8 +153,8 @@ int main(int argc, char * argv[])
 	stat1();
 	stat2();
 	stat3();
-	httpsStat();
-	httpStat();
+	HTTPStat(httpsVec,"https");
+	HTTPStat(httpVec,"http");
 	flowPerHour();
 	return 0;
 }
