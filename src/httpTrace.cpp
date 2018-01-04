@@ -42,7 +42,7 @@ static std::vector<TargetShooterS> tgtArrayS;
 /*
  * Domain statistics, map from ip to stat
  */
-static std::map<uint32_t,DomainStat> domainStat;
+static std::map<std::string,DomainStat> domainStat;
 static std::vector<DomainStat> domainArray;
 
 class CanAdd
@@ -107,8 +107,9 @@ inline void flush()
 	std::cerr<<"Flow count : "<<tgtArrayS.size()<<std::endl;
 	for(auto tgts : tgtArrayS)
 	{
-		auto & dms = domainStat[tgts.ch.srcip];
-		dms.ip = tgts.ch.srcip;
+		std::string url = findAddr(tgts.ch.srcip);
+		auto & dms = domainStat[url];
+		dms.url = url;
 		dms.hit_times++;
 		dms.flowSize.push_back(tgts.size);
 	

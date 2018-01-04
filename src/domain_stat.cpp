@@ -14,13 +14,10 @@
 std::string 
 DomainStat::getBasicInfo()
 {
-	struct in_addr in;
-	in.s_addr = ntohl(this->ip);
-
 	char buf[300];
-	sprintf(buf,"ip = %s, domain name = %s, hit times = %d" \
+	sprintf(buf,"domain name = %s, hit times = %d" \
 				", average flow size = %d",
-			inet_ntoa(in), findAddr(this->ip).c_str(),
+			url.c_str(),
 		   	this->hit_times,
 			this->getTotalSize()/this->hit_times);
 	return std::string(buf);
@@ -42,9 +39,18 @@ DomainStat::printToFile(std::ostream &_f)
 		_f<<size<<std::endl;
 }
 
+void
+DomainStat::dumpTo(std::ostream & _f)
+{
+	_f<<url<<" "<<hit_times<<std::endl;
+	for(int size : flowSize)
+		_f<<size<<" ";
+	_f<<std::endl;
+}
+
 bool operator<(const DomainStat & l, const DomainStat & r)
 {
-	return l.ip<r.ip;
+	return l.url<r.url;
 }
 
 bool more_hit(const DomainStat & l, const DomainStat & r)

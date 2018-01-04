@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define ADDR_NOT_FOUND "Addr_not_found"
 // Ethernet type constants
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	#define IPV4_T	0X8

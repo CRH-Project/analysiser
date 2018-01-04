@@ -172,5 +172,5 @@ std::string findAddr(int ip)
 	}
 	if(dnsData.count(ip))
 		return dnsData[ip];
-	else return "Addr not found";
+	else return ADDR_NOT_FOUND;
 }

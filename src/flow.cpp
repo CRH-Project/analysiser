@@ -167,8 +167,9 @@ void getVec(_MAP_T & Map, _VEC_T &Vec, bool (*cmp)(int))
 		ip = ntohl(ip);
 
 		std::string url = findAddr(ip);
+		
 		auto & dms = Map[url];
-		dms.ip = ip;
+		dms.url = url;
 		dms.hit_times ++;
 		dms.flowSize.push_back(flow.size);
 	}

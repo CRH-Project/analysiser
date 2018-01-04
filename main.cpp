@@ -113,19 +113,30 @@ void HTTPStat(vector<DomainStat> & vec, string folder)
 	int a=mkdir(s2.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
 	ofstream fout,foutBrief;
 	foutBrief.open(s2+"brief.txt",std::ios::out);
-	for(int i=0;i<m;i++)
+	for(int i=0,j=0;i<m;i++)
 	{
-		fout.open(s2+folder+"_RANK"+std::to_string(i)+".txt",
+		fout.open(s2+folder+"_RANK"+std::to_string(j)+".txt",
 				std::ios::out);
+		if(vec[i].url == ADDR_NOT_FOUND)
+		{
+			m++;continue;
+		}	
 		std::cerr<<vec[i].getBasicInfo()<<std::endl;
 		vec[i].printToFile(fout);
 		fout.close();
+		j++;
 	}
 	for(auto end : vec)
 	{
 		foutBrief<<end.getBasicInfo()<<std::endl;
 	}
 	foutBrief.close();
+	
+	/* dump file */
+	ofstream dump(s2+"raw_data.txt",std::ios::out);
+	for(auto ent : vec)
+		ent.dumpTo(dump);
+	dump.close();
 }
 
 void flowPerHour()

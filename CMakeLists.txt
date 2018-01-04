@@ -23,7 +23,10 @@ ADD_EXECUTABLE(http http.cpp)
 TARGET_LINK_LIBRARIES(http cxx_src_lib ${PCAP})
 ADD_EXECUTABLE(split split.cpp)
 TARGET_LINK_LIBRARIES(split c_src_lib cxx_src_lib ${PCAP})
+ADD_EXECUTABLE(merge_data merge_data.cpp)
+TARGET_LINK_LIBRARIES(merge_data c_src_lib cxx_src_lib)
+
 
 INSTALL(TARGETS 
-			unpcap main tcpflow http split
+			unpcap main tcpflow http split merge_data
 		DESTINATION bin)

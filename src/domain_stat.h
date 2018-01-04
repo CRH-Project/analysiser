@@ -2,6 +2,7 @@
 #define _DOMAIN_STAT_HH_
 
 /* MACROS AND INCLUDE FILES */
+#include "headers.h"
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -9,15 +10,15 @@
 /* GLB TYPE AND VARS DEFINITIONS */
 struct DomainStat
 {
-	uint32_t ip;
+	std::string url;
 	int hit_times;
 	std::vector<int> flowSize;
 public:
-	DomainStat():ip(0),hit_times(0){}
-	DomainStat(int _ip):ip(_ip),hit_times(0){}
+	DomainStat():hit_times(0){url=ADDR_NOT_FOUND;}
 	int getTotalSize();
 	std::string getBasicInfo();
 	void printToFile(std::ostream &_f);
+	void dumpTo(std::ostream & _f);
 };
 
 /* CLASS HELPER FUNCTION DEFINITIONS */
