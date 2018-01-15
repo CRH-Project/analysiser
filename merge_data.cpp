@@ -116,6 +116,8 @@ int main(int argc, char *argv[])
 	{
 		if(dir.back()!='/')
 			dir.push_back('/');
+		dir += argv[2];
+		dir += '/';
 		
 		datafin.open(dir+DATA_FILE);
 		
