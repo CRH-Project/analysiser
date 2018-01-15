@@ -11,6 +11,7 @@ NAMES=(
 
 TARGET_ROOT_DIR=total
 BIN_PATH=/media/xia/Soar1/tcpdump-new/analysiser/bin
+rm -rf ${TARGET_ROOT_DIR}
 mkdir -p $TARGET_ROOT_DIR
 
 #MERGE FLOW DATA
@@ -26,7 +27,7 @@ done
 
 #MERGE HTTP AND HTTPS DATA
 touch dir.txt
-ls | awk '{print i$0}' i=`pwd`'/' | grep anal > dir.txt
+ls | awk '{print i$0}' i=`pwd`'/' | grep "-anal" > dir.txt
 ${BIN_PATH}/merge_data dir.txt http 2&>1 > /dev/null
 ${BIN_PATH}/merge_data dir.txt https 2$>1 > /dev/null 
 

@@ -66,10 +66,11 @@ int printStat()
 	ofstream fout,foutBrief(prefix + "brief.txt");
 	for(int i=0,j=0;i<m;i++)
 	{
-		fout.open(s2+"_RANK"+std::to_string(j)+".txt",
+		fout.open(s2+"RANK"+std::to_string(j)+".txt",
 				std::ios::out);
 		if(Vec[i].url == ADDR_NOT_FOUND)
 		{
+			fout.close();
 			m++;continue;
 		}	
 		std::cerr<<Vec[i].getBasicInfo()<<std::endl;
