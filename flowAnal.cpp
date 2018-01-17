@@ -150,7 +150,7 @@ void flowPerHour()
 int main(int argc, char * argv[])
 {
 	//test for split
-	if(argc!=3) cerr<<"USAGE :"<<argv[0]<<" <filename> <output_folder_prefix>"<<endl;
+	if(argc!=3){ cerr<<"USAGE :"<<argv[0]<<" <filename> <output_folder_prefix>"<<endl; exit(-1);}
 	int b=atoi(argv[1]);
 	runFlow(argv[1]);	
 	//s=string(argv[1]);
@@ -168,5 +168,3 @@ int main(int argc, char * argv[])
 	HTTPStat(httpsVec,"https");
 	HTTPStat(httpVec,"http");
 	flowPerHour();
-	return 0;
-}
