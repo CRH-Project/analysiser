@@ -9,24 +9,30 @@ FIND_LIBRARY(PCAP pcap REQUIRED)
 
 
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(simulator)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/simulator)
 
 #TODO: ADD_EXECUTABLES AND TARGET_LINK_LIBRARIES
 
-ADD_EXECUTABLE(unpcap unpcap.c)
+ADD_EXECUTABLE(unpcap unpcap.c)			#UNPCAP
 TARGET_LINK_LIBRARIES(unpcap ${PCAP})
-ADD_EXECUTABLE(main main.cpp)
-TARGET_LINK_LIBRARIES(main cxx_src_lib c_src_lib ${PCAP})
-ADD_EXECUTABLE(tcpflow tcpflow.c)
+ADD_EXECUTABLE(flowAnal flowAnal.cpp)	#FLOW ANALYSIS
+TARGET_LINK_LIBRARIES(flowAnal cxx_src_lib c_src_lib ${PCAP})
+ADD_EXECUTABLE(tcpflow tcpflow.c)		#TCP ANALYSIS @DEPRECATED
 TARGET_LINK_LIBRARIES(tcpflow ${PCAP})
-ADD_EXECUTABLE(http http.cpp)
+ADD_EXECUTABLE(http http.cpp)			#HTTP ANALYSIS
 TARGET_LINK_LIBRARIES(http cxx_src_lib ${PCAP})
-ADD_EXECUTABLE(split split.cpp)
+ADD_EXECUTABLE(split split.cpp)			#SPLITER
 TARGET_LINK_LIBRARIES(split c_src_lib cxx_src_lib ${PCAP})
-ADD_EXECUTABLE(merge_data merge_data.cpp)
+ADD_EXECUTABLE(merge_data merge_data.cpp)	#FOR DATA MERGE
 TARGET_LINK_LIBRARIES(merge_data c_src_lib cxx_src_lib)
+ADD_EXECUTABLE(sim sim.cpp)
+TARGET_LINK_LIBRARIES(sim 
+	cxx_src_lib cxx_sim_lib c_src_lib
+	${PCAP})
 
 
 INSTALL(TARGETS 
-			unpcap main tcpflow http split merge_data
+			unpcap flowAnal tcpflow http split merge_data sim
 		DESTINATION bin)
