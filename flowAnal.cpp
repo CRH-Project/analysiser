@@ -150,12 +150,13 @@ void flowPerHour()
 int main(int argc, char * argv[])
 {
 	//test for split
-	if(argc!=2) cerr<<"USAGE ./main <filename>"<<endl;
+	if(argc!=3) cerr<<"USAGE :"<<argv[0]<<" <filename> <output_folder_prefix>"<<endl;
 	int b=atoi(argv[1]);
 	runFlow(argv[1]);	
-	s=string(argv[1]);
-	s=s.substr(0,s.find("."));
-	s+="-anal/";
+	//s=string(argv[1]);
+	//s=s.substr(0,s.find("."));
+	//s+="-anal/";
+	s = argv[2]+"-anal/";
 	int a=mkdir(s.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
 	cout<<"max rate: "<<getMaxRate()<<endl
 		<<"max duration: "<<getMaxDura()<<endl;

@@ -45,6 +45,13 @@ static std::vector<TargetShooterS> tgtArrayS;
 static std::map<std::string,DomainStat> domainStat;
 static std::vector<DomainStat> domainArray;
 
+typedef std::map<std::string,size_t> TypeSize;
+/*
+ * Domain statistics, map from domain name to content-type 
+ */
+static std::multimap<std::string,TypeSize> domainType;
+
+
 class CanAdd
 {
 	public:
@@ -112,7 +119,8 @@ inline void flush()
 		dms.url = url;
 		dms.hit_times++;
 		dms.flowSize.push_back(tgts.size);
-	
+
+		
 	}
 
 	std::cerr<<"sorting domains by hit times..."<<std::endl;
