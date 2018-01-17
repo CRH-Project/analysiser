@@ -1,6 +1,22 @@
 #ifndef _UTILS_HH_
 #define _UTILS_HH_
 
+#ifdef __cplusplus
+
+
+bool operator<(const struct timeval & l,
+							const struct timeval & r);
+struct timeval operator+(const struct timeval & l,
+							const struct timeval & r);
+struct timeval operator-(const struct timeval & l,
+							const struct timeval & r);
+struct timeval operator*(const struct timeval & l,
+							const int r);
+
+
+extern "C"
+{
+#endif 
 //FUNCTION: itoa(int)
 //transfer an integer to string...
 const char * itoa(int cnt);
@@ -19,5 +35,8 @@ const char * itoa(int cnt);
  */
 int getField(char * dst, const char * src, char * targetName);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

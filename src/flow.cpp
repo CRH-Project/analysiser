@@ -1,4 +1,5 @@
 #include "flow.h"
+#include "utils.h"
 #include "domain_stat.h"
 #include "dns_trace.h"
 #include "roll.h"
@@ -28,10 +29,10 @@ std::vector<FlowType>  flowPerHour[MAXHOUR];
 int flowNumPerHour[MAXHOUR];
 struct timeval beginTime;
 
-bool operator<(const struct timeval & l, const struct timeval & r){
+/*bool operator<(const struct timeval & l, const struct timeval & r){
 	if(l.tv_sec == r.tv_sec) return l.tv_usec<r.tv_usec;
 	return l.tv_sec<r.tv_sec;
-}
+}*/
 bool operator==(const struct timeval & l,const struct timeval & r)
 {
 	return l.tv_sec==r.tv_sec && l.tv_usec==r.tv_usec;
@@ -40,7 +41,7 @@ bool operator<(const PacketInfo & l, const PacketInfo & r)
 {
 	return l.tv<r.tv;
 }
-struct timeval operator-(const struct timeval & l,const struct timeval & r)
+/*struct timeval operator-(const struct timeval & l,const struct timeval & r)
 {
 	struct timeval ans;
 	__suseconds_t pp=0;
@@ -49,7 +50,7 @@ struct timeval operator-(const struct timeval & l,const struct timeval & r)
 	if(l.tv_usec<r.tv_usec){pp=1000000;ans.tv_sec-=1;}
 	ans.tv_usec=pp+l.tv_usec-r.tv_usec;
 	return ans;
-}
+}*/
 std::ostream & operator<<(std::ostream & o, PacketInfo & p)
 {
 	o<<"( SEQ:"<<(p.seq%65535)<<", LEN:"<<p.tot_len<<", NSEQ:"<<(p.seq+p.tot_len)%65535<<", ISEQ:"<<p.seq<<", TIME:"<<p.tv.tv_sec<<"."<<p.tv.tv_usec<<")";

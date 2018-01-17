@@ -11,6 +11,8 @@ int roll(const char * fileName, pcap_handler ph)
 	u_char err[100];
 	int errcode = pcap_loop(pcap,0,ph,err);
 	fclose(f);
+	if(errcode)
+		fprintf(stderr,"ERROR OCCURED: %s\n",err);
 	return errcode;
 }
 
