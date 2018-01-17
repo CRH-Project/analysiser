@@ -156,7 +156,7 @@ int main(int argc, char * argv[])
 	//s=string(argv[1]);
 	//s=s.substr(0,s.find("."));
 	//s+="-anal/";
-	s = argv[2]+"-anal/";
+	s = string(argv[2])+string("-anal/");
 	int a=mkdir(s.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
 	cout<<"max rate: "<<getMaxRate()<<endl
 		<<"max duration: "<<getMaxDura()<<endl;
