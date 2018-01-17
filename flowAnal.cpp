@@ -168,3 +168,5 @@ int main(int argc, char * argv[])
 	HTTPStat(httpsVec,"https");
 	HTTPStat(httpVec,"http");
 	flowPerHour();
+	return 0;
+}

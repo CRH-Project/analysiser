@@ -72,6 +72,7 @@ int total;
 void flowHandler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 {
 	total++;
+	if(total == 1) beginTime = h->ts;
 	const struct Ethernet *link = (struct Ethernet *)pkt;
 //	printf("eth type is: %x\n",link->type);
 	const struct Ipv4 *net = (struct Ipv4 *)(pkt + sizeof(struct Ethernet));
@@ -82,7 +83,6 @@ void flowHandler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 	_len = _len - 4*net->ihl -4*trans->doff;
 	SocketStat skt(net->srcip,net->dstip,ntohs(trans->srcport),ntohs(trans->dstport));
 	PacketInfo pkt_info(_len,ntohl(trans->seq),h->ts);
-	if(total == 1) beginTime = pkt_info.tv;
 	skt_map[skt].insert(pkt_info);
 }
 

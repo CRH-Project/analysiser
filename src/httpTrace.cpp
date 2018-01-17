@@ -49,7 +49,7 @@ typedef std::map<std::string,size_t> TypeSize;
 /*
  * Domain statistics, map from domain name to content-type 
  */
-static std::multimap<std::string,TypeSize> domainType;
+static std::map<std::string,TypeSize> domainType;
 
 
 class CanAdd
@@ -90,6 +90,14 @@ struct CleanTarget
 		return false;
 	}
 };
+
+
+inline void addTypeSize(const TargetShooter & tgt, size_t size)
+{
+	std::string url = findAddr(tgt.ch.srcip);
+	auto & typesize = domainType[url];
+	typesize[tgt.type] += size;
+}
 /*
  * FUNCTION void flush()
  *
@@ -109,6 +117,11 @@ inline void flush()
 		else tot_flows++;
 		if(tgtArrayS.back().size == 0)
 			tgtArrayS.pop_back();
+		else
+		{
+			/* update typesize for the url */
+			addTypeSize(tgt, tgtArrayS.back().size);
+		}
 	}
 
 	std::cerr<<"Flow count : "<<tgtArrayS.size()<<std::endl;
@@ -119,7 +132,6 @@ inline void flush()
 		dms.url = url;
 		dms.hit_times++;
 		dms.flowSize.push_back(tgts.size);
-
 		
 	}
 
@@ -170,6 +182,7 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 				tgtArrayS.push_back(TargetShooterS(
 										pack.ch,pack.tot_len)
 						);
+				addTypeSize(temp,pack.tot_len);
 			}
 
 		}
@@ -240,6 +253,7 @@ void printBaiscInfo()
 		total+=e.second;
 	}
 	fout<<"Total size ,"<<total<<std::endl;
+	fout.close();
 }
 
 void printFlowPerContent()
@@ -292,6 +306,25 @@ void printDomainStat()
 				std::ios::out);
 		domainArray[i].printToFile(fout);
 		fout.close();
+	}
+	/* print type size */
+	fout.open(pre+"type_size.txt",std::ios::out);
+	for(auto ent : domainType)
+	{
+		fout<<ent.first<<std::endl;
+		for(auto ent2 : ent.second)
+		{
+			fout<<"    "<<ent2.first<<" "<<ent2.second<<" bytes"
+				<<std::endl;
+		}
+	}
+	fout.close();
+	
+	/* print brief info */
+	fout.open(pre+"brief.txt",std::ios::out);
+	for(auto v :domainArray)
+	{
+		fout<<v.getBasicInfo()<<std::endl;
 	}
 }
 
