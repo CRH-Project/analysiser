@@ -132,7 +132,6 @@ inline void flush()
 		dms.url = url;
 		dms.hit_times++;
 		dms.flowSize.push_back(tgts.size);
-		
 	}
 
 	std::cerr<<"sorting domains by hit times..."<<std::endl;
@@ -344,4 +343,3 @@ void setPrefix(const std::string &s)
 {
 	prefix = s;
 	mkdir(prefix.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-}

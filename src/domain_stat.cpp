@@ -16,14 +16,14 @@ DomainStat::getBasicInfo()
 {
 	char buf[300];
 	sprintf(buf,"domain name = %s, hit times = %d" \
-				", average flow size = %d",
+				", average flow size = %ld",
 			url.c_str(),
 		   	this->hit_times,
 			this->getTotalSize()/this->hit_times);
 	return std::string(buf);
 }
 
-int
+size_t
 DomainStat::getTotalSize()
 {
 	int sum = 0;

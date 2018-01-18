@@ -12,10 +12,10 @@ struct DomainStat
 {
 	std::string url;
 	int hit_times;
-	std::vector<int> flowSize;
+	std::vector<size_t> flowSize;
 public:
 	DomainStat():hit_times(0){url=ADDR_NOT_FOUND;}
-	int getTotalSize();
+	size_t getTotalSize();
 	std::string getBasicInfo();
 	void printToFile(std::ostream &_f);
 	void dumpTo(std::ostream & _f);

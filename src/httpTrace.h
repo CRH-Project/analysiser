@@ -114,7 +114,7 @@ inline bool operator<(const TargetShooter & l, const TargetShooter & r)
 struct TargetShooterS
 {
 	const Channel ch;
-	int size;
+	size_t size;
 	TargetShooterS(const Channel & l,int size = 0):ch(l)
 	{
 		this->size = size;
