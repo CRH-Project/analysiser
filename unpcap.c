@@ -4,7 +4,9 @@
 #include <assert.h>
 #define USRNUM 5000
 #define APNUM 500
+#ifndef ISUSR 
 #define ISUSR(ip) (((ip) & 0xffff0000) == 0xc0a80000)
+#endif
 #define ISHTTP(port) ((port) == 80)
 #define ISSSL(port) ((port) == 443)
 #define ISWELLKNOWN(port) ((port) <= 1023)
