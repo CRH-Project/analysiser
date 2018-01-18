@@ -104,6 +104,11 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	const struct Udp_t *trans = (struct Udp_t *)((u_char *)net + 4 * net->ihl);
 	const char *app = (char *)((u_char *)trans + sizeof(struct Udp_t));
 
+	/* not tcp -> don't simulate */
+	if(net->protocol != 6) return;
+	/* not download -> don't simulate */
+	if(!ISUSR(ntohl(net->dstip))) return;
+
 	/*GET TIME INFO*/
 	curr = h->ts - start;
 	struct timeval delta = curr - prev;

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define ISUSR(ip) (((ip) & 0xffff0000) == 0xc0a80000 && ((ip)!=0xc0a80a01) && ((ip)!=0xc0a80a02))
 #define ADDR_NOT_FOUND "Addr_not_found"
 // Ethernet type constants
 #if __BYTE_ORDER == __LITTLE_ENDIAN

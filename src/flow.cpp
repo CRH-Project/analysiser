@@ -14,7 +14,6 @@
 #include <map>
 #include <set>
 #include <string>
-#define ISUSR(ip) (((ip) & 0xffff0000) == 0xc0a80000 && ((ip)!=0xc0a80a01) && ((ip)!=0xc0a80a02))
 #define ISHTTPS(port)	((port) == 443)
 #define ISHTTP(port)	((port) == 80)
 #define MAXHOUR		20

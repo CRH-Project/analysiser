@@ -87,10 +87,11 @@ void stat2()
 //MAYBE 4? (UPLOAD/DOWNLOAD);
 void stat3()
 {
-	int duration = 0, size = 1;
-	ofstream fouts[2];
+	int duration = 0, size = 1, ds = 3;
+	ofstream fouts[3];
 	fouts[duration].open(s+"(TIMESTP,DURATION).txt",ios::out);
 	fouts[size].open(s+"(TIMESTP,SIZE).txt",ios::out);
+	fouts[ds].open(s+"(DURATION,SIZE).txt",ios::out);
 	for(auto flow : flowVec)
 	{
 		auto ps = &flow.start;
@@ -99,8 +100,9 @@ void stat3()
 		ss[3]=ss[7]=ss[10]=ss[19]='-';
 		fouts[duration]<<ss<<" "<<flow.calDuration()<<endl;
 		fouts[size]<<ss<<" "<<flow.size<<endl;
+		fouts[ds]<<flow.calDuration()<<" "<<flow.size<<endl;
 	}
-	for(int i=0;i<2;i++) fouts[i].close();
+	for(int i=0;i<3;i++) fouts[i].close();
 }
 
 
