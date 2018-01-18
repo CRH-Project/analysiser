@@ -293,7 +293,7 @@ void printPerHour(std::string prefix)
 		int th = 0;
 		for(auto size : flowPerHour[i])
 		{
-			th = size.size;
+			th += size.size;
 		}
 		fout2<<th<< "\t### "<<i<<"th hour"<<std::endl;
 	}
