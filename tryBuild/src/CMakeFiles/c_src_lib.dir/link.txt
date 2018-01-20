@@ -1,2 +1,0 @@
-/usr/bin/ar qc libc_src_lib.a  CMakeFiles/c_src_lib.dir/utils.c.o CMakeFiles/c_src_lib.dir/spliter.c.o
-/usr/bin/ranlib libc_src_lib.a

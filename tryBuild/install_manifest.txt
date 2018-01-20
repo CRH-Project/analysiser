@@ -1,5 +1,0 @@
-/home/aposta/projects/network/CRH/analysiser/bin/unpcap
-/home/aposta/projects/network/CRH/analysiser/bin/main
-/home/aposta/projects/network/CRH/analysiser/bin/tcpflow
-/home/aposta/projects/network/CRH/analysiser/bin/http
-/home/aposta/projects/network/CRH/analysiser/bin/split

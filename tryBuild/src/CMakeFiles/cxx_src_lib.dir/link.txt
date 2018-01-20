@@ -1,2 +1,0 @@
-/usr/bin/ar qc libcxx_src_lib.a  CMakeFiles/cxx_src_lib.dir/flow.cpp.o CMakeFiles/cxx_src_lib.dir/roll.cpp.o CMakeFiles/cxx_src_lib.dir/httpTrace.cpp.o CMakeFiles/cxx_src_lib.dir/utils.cpp.o CMakeFiles/cxx_src_lib.dir/domain_stat.cpp.o CMakeFiles/cxx_src_lib.dir/dns_trace.cpp.o
-/usr/bin/ranlib libcxx_src_lib.a
