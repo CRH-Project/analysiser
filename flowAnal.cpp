@@ -87,7 +87,7 @@ void stat2()
 //MAYBE 4? (UPLOAD/DOWNLOAD);
 void stat3()
 {
-	int duration = 0, size = 1, ds = 3;
+	int duration = 0, size = 1, ds = 2;
 	ofstream fouts[3];
 	fouts[duration].open(s+"(TIMESTP,DURATION).txt",ios::out);
 	fouts[size].open(s+"(TIMESTP,SIZE).txt",ios::out);
@@ -155,11 +155,14 @@ int main(int argc, char * argv[])
 	if(argc!=3){ cerr<<"USAGE :"<<argv[0]<<" <filename> <output_folder_prefix>"<<endl; exit(-1);}
 	int b=atoi(argv[1]);
 	runFlow(argv[1]);	
-	//s=string(argv[1]);
-	//s=s.substr(0,s.find("."));
-	//s+="-anal/";
-	s = string(argv[2])+string("-anal/");
+	
+	s=string(argv[2]);
+	while(s.back() == '/') s.pop_back();
+	s+="-anal/";
+
 	int a=mkdir(s.c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+	fprintf(stderr,"%s in main() [making dir of %s]\n",
+		   strerror(errno), s.c_str());	   
 	cout<<"max rate: "<<getMaxRate()<<endl
 		<<"max duration: "<<getMaxDura()<<endl;
 	//sortPacket(sortBySize);

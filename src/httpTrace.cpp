@@ -343,3 +343,5 @@ void setPrefix(const std::string &s)
 {
 	prefix = s;
 	mkdir(prefix.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+}
+

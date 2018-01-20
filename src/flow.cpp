@@ -94,7 +94,7 @@ void printFlow()
 		std::cout<<skt<<std::endl;
 		uint32_t prevseq=0;
 		uint32_t flowcnt=0;
-		uint32_t flowsize=0;
+		size_t flowsize=0;
 		uint32_t pkt_count=0;
 		timeval start,end,duration;
 		for(auto pkt : pskt.second)
@@ -290,7 +290,7 @@ void printPerHour(std::string prefix)
 	for(int i=0;i<MAXHOUR && flowNumPerHour[i];i++)
 	{
 		fout<<flowNumPerHour[i]<< "\t### "<<i<<"th hour"<<std::endl;
-		int th = 0;
+		size_t th = 0;
 		for(auto size : flowPerHour[i])
 		{
 			th += size.size;

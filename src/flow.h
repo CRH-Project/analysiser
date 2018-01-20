@@ -46,7 +46,7 @@ class FlowType
 {
 public:
 	SocketStat st;
-	uint32_t size;
+	size_t size;
 	timeval tv;
 	time_t start;
 	enum dir_t{UPLOAD,DOWNLOAD}direction;
