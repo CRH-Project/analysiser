@@ -73,7 +73,6 @@ void flowHandler(u_char *user, const struct pcap_pkthdr *h, const u_char *pkt)
 	total++;
 	if(total == 1) beginTime = h->ts;
 	const struct Ethernet *link = (struct Ethernet *)pkt;
-//	printf("eth type is: %x\n",link->type);
 	const struct Ipv4 *net = (struct Ipv4 *)(pkt + sizeof(struct Ethernet));
 	const struct Tcp *trans = (struct Tcp *)((u_char *)net + 4 * net->ihl);
 	if (net->protocol!=6) return;

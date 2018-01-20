@@ -27,7 +27,10 @@ ADD_EXECUTABLE(split split.cpp)			#SPLITER
 TARGET_LINK_LIBRARIES(split c_src_lib cxx_src_lib ${PCAP})
 ADD_EXECUTABLE(merge_data merge_data.cpp)	#FOR DATA MERGE
 TARGET_LINK_LIBRARIES(merge_data c_src_lib cxx_src_lib)
-ADD_EXECUTABLE(sim sim.cpp)
+ADD_EXECUTABLE(percentage percentage.cpp)
+TARGET_LINK_LIBRARIES(percentage cxx_src_lib ${PCAP})
+
+ADD_EXECUTABLE(sim sim.cpp)				#SIMULATOR
 TARGET_LINK_LIBRARIES(sim 
 	cxx_src_lib cxx_sim_lib c_src_lib
 	${PCAP})
@@ -35,4 +38,5 @@ TARGET_LINK_LIBRARIES(sim
 
 INSTALL(TARGETS 
 			unpcap flowAnal tcpflow http split merge_data sim
+			percentage
 		DESTINATION bin)
