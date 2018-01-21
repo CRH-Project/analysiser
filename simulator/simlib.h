@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <list>
+#include "FlowInfo.h"
 
 /*=============================*/
 /*GLB TYPE AND VAR DECLARATIONS*/
@@ -25,6 +26,9 @@ typedef struct buffer_t
 	size_t c_cnt;
 	std::list<double> pkts;
 } Buffer;
+
+class FlowInfo;
+
 #endif
 
 /*=====================*/
@@ -33,10 +37,6 @@ typedef struct buffer_t
 
 #ifdef __cplusplus
 /* C++ FUNCTIONS */
-Buffer			get_buffer_info(int index);
-extern "C"
-{
-#endif
 
 
 /**
@@ -55,19 +55,22 @@ struct timeval	update_buffer(struct timeval delta,
 							const struct timeval & interval);
 void			buffer_add(int index, size_t len);
 double			buffer_dec(int index, double len);
+Buffer			get_buffer_info(int index);
 
 
 /**
  * FUNCTIONS INFO GETTERS
  *
  * timeval	get_start_time()
+ * timeval	get_curr_time()
  * int		get_bandwidth(index, timestamp)
+ * FlowInfo get_current_flow()
  */
-struct timeval get_start_time();
-double get_bandwidth(int ind, struct timeval timestamp);
+struct timeval	get_start_time();
+struct timeval	get_curr_time();
+double			get_bandwidth(int ind, struct timeval timestamp);
+const FlowInfo& get_current_flow();
 
-
-#ifdef __cplusplus
-}
 #endif 
+
 #endif

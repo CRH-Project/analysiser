@@ -7,6 +7,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <pcap.h>
+#include <set>
+#include <cmath>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -21,7 +23,11 @@ static int total = 0;
 static const struct timeval interval = {0l,100l};
 static scheduler_t scheduler;	/*the scheduler used*/
 static result_t curr_ans;		/*the result*/
-static struct timeval prev = {0l,0l},curr = {0l,0l},start;
+static struct timeval prev = {0l,0l},curr = {0l,0l},
+					  /*these two are the distance to 'start'*/
+					  start;
+static FlowInfo currFlow;
+static std::set<FlowInfo> flowSet;
 
 /*============================*/
 /*HELPER FUNCTIONS DEFINITIONS*/
@@ -30,6 +36,7 @@ void roller(u_char *, const struct pcap_pkthdr*,
 				const u_char *);
 void update_result(const struct timeval & effnum);
 void flush_buffer();
+FlowInfo add_flow(const FlowInfo &);
 
 
 bool operator<(const struct timeval & l,
@@ -89,6 +96,77 @@ void flush_buffer()
 
 
 /**
+ * HELPER FUNCTION add_flow(flow)
+ *
+ * Add flow into a set, check if this flow exists
+ *
+ * @param flow	the flow to add
+ *
+ * @returns the matched flow in the flow set
+ */
+FlowInfo add_flow(const FlowInfo & f)
+{
+	FlowInfo ret;
+	auto pTarget = flowSet.find(f);
+
+	/* the specified (ip,port) pair dosen't existed */
+	if(pTarget == flowSet.end())
+	{
+		flowSet.insert(f);
+		return f;
+	}
+
+	/* the specified (ip,port) pair exists */
+	/* check if f is the same flow with it */
+	/* using sequence number of both side  */
+	const FlowInfo & target = *pTarget;
+	auto tseq = target.getMaxSeq();
+	auto fseq = f.getMaxSeq();
+	int diff = std::abs(tseq - fseq);
+
+	/* new sequence number too big/small , new flow */
+	if(diff > FlowInfo::THRESHOLD)
+	{
+		flowSet.erase(pTarget);		/* remove old target */
+		flowSet.insert(f);			/* insert new flow	 */
+		ret = f;
+	}
+	else if (fseq < target.getStartSeq())
+		/* smaller than start, update start and size */
+	{
+		FlowInfo newF = target;
+		newF.setStartSeq(f.getStartSeq());
+		newF.addSize(f.getSize());
+		flowSet.erase(pTarget);
+		flowSet.insert(newF);
+		ret = newF;
+	}
+	else if (fseq > tseq)
+		/* update curr and size */
+	{
+		FlowInfo newF = target;
+		newF.setMaxSeq(f.getMaxSeq());
+		newF.addSize(f.getSize());
+		flowSet.erase(pTarget);
+		flowSet.insert(newF);
+		ret = newF;
+	}
+	else /* only update size */
+	{
+		FlowInfo newF = target;
+		newF.addSize(f.getSize());
+		flowSet.erase(pTarget);
+		flowSet.insert(newF);
+		ret = newF;
+	}
+
+	return ret;
+
+}
+
+
+
+/**
  * HELPER FUNCTION roller(name, h, pkt)
  *
  * the main routine of simulation
@@ -101,8 +179,7 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	/*INITIALIZATION*/
 	const struct Ethernet *link = (struct Ethernet *)pkt;
 	const struct Ipv4 *net = (struct Ipv4 *)(pkt + sizeof(struct Ethernet));
-	const struct Udp_t *trans = (struct Udp_t *)((u_char *)net + 4 * net->ihl);
-	const char *app = (char *)((u_char *)trans + sizeof(struct Udp_t));
+	const struct Tcp_t *trans = (struct Tcp_t *)((u_char *)net + 4 * net->ihl);
 
 	/* not tcp -> don't simulate */
 	if(net->protocol != 6) return;
@@ -123,6 +200,18 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	struct timeval idle_time = update_buffer(delta,interval);
 	update_result(delta - idle_time);
 
+	/*UPDATE FLOW INFO*/
+	uint16_t srcport = ntohs(trans->srcport),
+			 dstport = ntohs(trans->dstport);
+	uint32_t srcip = ntohl(net->srcip),
+			 dstip = ntohl(net->dstip);
+	uint32_t seq = ntohl(trans->seq);
+	size_t len = h->len;
+	
+	FlowInfo temp(srcip,dstip,srcport,dstport,seq);
+	currFlow = add_flow(temp);
+
+	/*GET CARD NUMBER*/
 	int num = scheduler();
 	
 	/*INSERT IT INTO BUFFER*/
@@ -207,3 +296,35 @@ struct timeval get_start_time()
 	return start;
 }
 
+
+/**
+ * FUNCTION get_curr_time
+ *
+ * Get current time, i.e. the distance to the start
+ * 
+ * @returns current time [DISTANCE]
+ *
+ * @example start = (100,123)
+ *			curr  = (201,456)
+ *			then ret = (101,111)
+ */
+struct timeval get_curr_time()
+{
+	return curr;
+}
+
+
+/**
+ * FUNCTION get_curr_flow
+ *
+ * Get current flow, i.e. the flow which current
+ * packet belongs to
+ *
+ * @returns current packet
+ *
+ * @see FlowInfo.h
+ */
+const FlowInfo& get_current_flow()
+{
+	return currFlow;
+}
