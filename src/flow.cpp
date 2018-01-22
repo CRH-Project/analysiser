@@ -289,12 +289,14 @@ void printPerHour(std::string prefix)
 	for(int i=0;i<MAXHOUR && flowNumPerHour[i];i++)
 	{
 		fout<<flowNumPerHour[i]<< "\t### "<<i<<"th hour"<<std::endl;
-		size_t th = 0;
+		double sum = 0;
+		size_t cnt = 0;
 		for(auto size : flowPerHour[i])
 		{
-			th += size.size;
+			sum += size.calRate();
+			cnt++;
 		}
-		fout2<<th<< "\t### "<<i<<"th hour"<<std::endl;
+		fout2<<sum<<" "<<cnt<< "\t### "<<i<<"th hour"<<std::endl;
 	}
 	fout.close();
 	fout2.close();
