@@ -9,6 +9,7 @@
 #include <pcap.h>
 #include <set>
 #include <cmath>
+#include <map>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -19,6 +20,8 @@
 /*GLB TYPE AND VARS DEFINITIONS*/
 /*=============================*/
 
+typedef std::pair<bool,FlowInfo> __Flow_PAIR;
+
 static int total = 0;
 static const struct timeval interval = {0l,100l};
 static scheduler_t scheduler;	/*the scheduler used*/
@@ -28,6 +31,7 @@ static struct timeval prev = {0l,0l},curr = {0l,0l},
 					  start;
 static FlowInfo currFlow;
 static std::set<FlowInfo> flowSet;
+static std::map<FlowInfo,int> flowMap;
 
 /*============================*/
 /*HELPER FUNCTIONS DEFINITIONS*/
@@ -36,7 +40,9 @@ void roller(u_char *, const struct pcap_pkthdr*,
 				const u_char *);
 void update_result(const struct timeval & effnum);
 void flush_buffer();
-FlowInfo add_flow(const FlowInfo &);
+__Flow_PAIR add_flow(const FlowInfo &);
+void update_flow_map(const FlowInfo &, int);
+int get_flow_card(const FlowInfo &);
 
 
 bool operator<(const struct timeval & l,
@@ -52,6 +58,29 @@ struct timeval operator*(const struct timeval & l,
 /*========================*/
 /*FUNCTION IMPLEMENTATIONS*/
 /*========================*/
+
+
+/**
+ * HELPER FUNCTION update_flow_map(flow,card_num)
+ *
+ * update the flow map
+ */
+void update_flow_map(const FlowInfo & f, int num)
+{
+	flowMap[f] = num;
+}
+
+
+/**
+ * HELPER FUNCTION get_flow_card
+ *
+ * get card number of the flow
+ */
+int get_flow_card(const FlowInfo & f)
+{
+	return flowMap[f];
+}
+
 
 
 /**
@@ -103,17 +132,20 @@ void flush_buffer()
  * @param flow	the flow to add
  *
  * @returns the matched flow in the flow set
+ *			first : a boolean indicates if it is a new flow
+ *			second : a variable of FlowInfo
  */
-FlowInfo add_flow(const FlowInfo & f)
+__Flow_PAIR	 add_flow(const FlowInfo & f)
 {
 	FlowInfo ret;
+	bool flag = false;
 	auto pTarget = flowSet.find(f);
 
 	/* the specified (ip,port) pair dosen't existed */
 	if(pTarget == flowSet.end())
 	{
 		flowSet.insert(f);
-		return f;
+		return std::make_pair(true,f);
 	}
 
 	/* the specified (ip,port) pair exists */
@@ -122,13 +154,14 @@ FlowInfo add_flow(const FlowInfo & f)
 	const FlowInfo & target = *pTarget;
 	auto tseq = target.getMaxSeq();
 	auto fseq = f.getMaxSeq();
-	int diff = std::abs(tseq - fseq);
+	int diff = std::abs(int(tseq - fseq));
 
 	/* new sequence number too big/small , new flow */
 	if(diff > FlowInfo::THRESHOLD)
 	{
 		flowSet.erase(pTarget);		/* remove old target */
 		flowSet.insert(f);			/* insert new flow	 */
+		flag = true;				/* new flow */
 		ret = f;
 	}
 	else if (fseq < target.getStartSeq())
@@ -160,7 +193,7 @@ FlowInfo add_flow(const FlowInfo & f)
 		ret = newF;
 	}
 
-	return ret;
+	return std::make_pair(flag,ret);
 
 }
 
@@ -209,11 +242,22 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	size_t len = h->len;
 	
 	FlowInfo temp(srcip,dstip,srcport,dstport,seq);
-	currFlow = add_flow(temp);
+	__Flow_PAIR pair = add_flow(temp);
+	currFlow = pair.second; 
 
-	/*GET CARD NUMBER*/
-	int num = scheduler();
-	
+	int num = 0;
+	if(pair.first)	/* FLOW doesn't exist */
+	{
+		/*GET AND UPDATE CARD NUMBER*/
+		num = scheduler();
+		update_flow_map(currFlow,num);
+	}	
+	else			/* Flow exists */
+	{
+		num = get_flow_card(currFlow);
+	}
+
+	fprintf(stderr,"%d",num);
 	/*INSERT IT INTO BUFFER*/
 	buffer_add(num,h->len);
 
