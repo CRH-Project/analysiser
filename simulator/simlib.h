@@ -38,6 +38,15 @@ class FlowInfo;
 #ifdef __cplusplus
 /* C++ FUNCTIONS */
 
+/**
+ * BASIC SETTINGS
+ * 
+ * int		set_bdw_sourcefile(filename)
+ * void		reset_simulator(void)
+ */
+
+int				set_bdw_sourcefile(const char *);
+void			reset_simulator();
 
 /**
  * FUNCTIONS BUFFER OPERATIONS

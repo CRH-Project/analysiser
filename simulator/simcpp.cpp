@@ -23,7 +23,7 @@
 typedef std::pair<bool,FlowInfo> __Flow_PAIR;
 
 static int total = 0;
-static const struct timeval interval = {0l,100l};
+static const struct timeval interval = {1l,0l};
 static scheduler_t scheduler;	/*the scheduler used*/
 static result_t curr_ans;		/*the result*/
 static struct timeval prev = {0l,0l},curr = {0l,0l},
@@ -208,7 +208,10 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 			const u_char * pkt)
 {
 	total++;
-	if(total == 1) start = h->ts;
+	if(total == 1){
+	   	start = h->ts;
+		fprintf(stderr,"Starts at %ld\n",h->ts.tv_sec);
+	}
 	/*INITIALIZATION*/
 	const struct Ethernet *link = (struct Ethernet *)pkt;
 	const struct Ipv4 *net = (struct Ipv4 *)(pkt + sizeof(struct Ethernet));
@@ -257,7 +260,6 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 		num = get_flow_card(currFlow);
 	}
 
-	fprintf(stderr,"%d",num);
 	/*INSERT IT INTO BUFFER*/
 	buffer_add(num,h->len);
 
