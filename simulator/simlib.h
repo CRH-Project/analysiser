@@ -27,6 +27,9 @@ typedef struct buffer_t
 	std::list<double> pkts;
 } Buffer;
 
+typedef struct bdw_t
+ Bandwidth;
+
 class FlowInfo;
 
 #endif
@@ -41,17 +44,20 @@ class FlowInfo;
 /**
  * BASIC SETTINGS
  * 
- * int		set_bdw_sourcefile(filename)
+ * int		init_bdw_source(filename)
  * void		reset_simulator(void)
+ * int		buffer_init(count)
  */
 
-int				set_bdw_sourcefile(const char *);
-void			reset_simulator();
+int				init_bdw_source(const char *);
+void			clean_buffer();
+void			clean_simulator();
+int 			buffer_init(size_t count);
 
 /**
  * FUNCTIONS BUFFER OPERATIONS
  *
- * int		buffer_init(count)
+ * int		get_card_count()
  * timeval	update_buffer(delta,interval)
  * void		buffer_add(index,len)
  * size_t	buffer_dec(index,len)
@@ -59,11 +65,13 @@ void			reset_simulator();
  * 
  */
 
-int 			buffer_init(size_t count);
+int				get_card_count();
 struct timeval	update_buffer(struct timeval delta, 
 							const struct timeval & interval);
 void			buffer_add(int index, size_t len);
+void			buffer_add(Buffer & b, double len);
 double			buffer_dec(int index, double len);
+double			buffer_dec(Buffer & b, double len);
 Buffer			get_buffer_info(int index);
 
 
@@ -78,6 +86,8 @@ Buffer			get_buffer_info(int index);
 struct timeval	get_start_time();
 struct timeval	get_curr_time();
 double			get_bandwidth(int ind, struct timeval timestamp);
+struct timeval	get_bandwidth_start();
+struct timeval	get_bandwidth_end();
 const FlowInfo& get_current_flow();
 
 #endif 

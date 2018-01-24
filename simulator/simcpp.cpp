@@ -11,6 +11,7 @@
 #include <cmath>
 #include <map>
 
+#define TIPNUM 1000000
 //#define DEBUG
 #ifdef DEBUG
 #include "../src/headers.h"
@@ -208,10 +209,20 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 			const u_char * pkt)
 {
 	total++;
+
 	if(total == 1){
 	   	start = h->ts;
 		fprintf(stderr,"Starts at %ld\n",h->ts.tv_sec);
 	}
+	if(total % TIPNUM == 0)
+	{
+		fprintf(stderr,"%d packets done\n", total);
+	}
+
+	if(h->ts < get_bandwidth_start() ||
+			get_bandwidth_end() < h->ts)
+		return;
+
 	/*INITIALIZATION*/
 	const struct Ethernet *link = (struct Ethernet *)pkt;
 	const struct Ipv4 *net = (struct Ipv4 *)(pkt + sizeof(struct Ethernet));
@@ -253,6 +264,7 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	{
 		/*GET AND UPDATE CARD NUMBER*/
 		num = scheduler();
+//		fprintf(stderr,"new flow goes to %d\n",num);
 		update_flow_map(currFlow,num);
 	}	
 	else			/* Flow exists */
@@ -325,7 +337,7 @@ result_t get_result()
 void print_result()
 {
 	result_t res = get_result();
-	fprintf(stdout,"total packet length is %ld.%ld secs\n",
+	fprintf(stdout,"total trace length is %ld.%ld secs\n",
 			curr.tv_sec,curr.tv_usec);
 	fprintf(stdout,"final result is: %ld.%ld secs\n",
 			res.tv_sec, res.tv_usec);
@@ -374,3 +386,20 @@ const FlowInfo& get_current_flow()
 {
 	return currFlow;
 }
+
+
+/**
+ * FUNCTION clean_simulator()
+ *
+ * do clean up
+ */
+void clean_simulator()
+{
+	curr_ans = {0,0};
+	curr = prev = {0,0};
+	start = {0,0};
+	total = 0;
+	flowSet.clear();
+	flowMap.clear();
+}
+

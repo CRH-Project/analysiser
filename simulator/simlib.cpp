@@ -2,8 +2,11 @@
 #include "utils.h"
 #include <cmath>
 #include <cstdio>
+#include <vector>
 #include <exception>
 #include <iostream>
+#include <string>
+#include <fstream>
 //#define DEBUG
 #ifdef DEBUG
 #include "../src/utils.h"
@@ -11,9 +14,16 @@
 /*=============================*/
 /*GLB TYPE AND VARS DEFINITIONS*/
 /*=============================*/
+typedef double * __BDW_LINE;
+struct bdw_t
+{
+	__useconds_t start,end;
+	std::vector<__BDW_LINE> data;
+};
 
 static Buffer * buffers;
 static int		buffercnt;
+static Bandwidth bdw_data;
 
 /*========================*/
 /*FUNCTION IMPLEMENTATIONS*/
@@ -25,9 +35,88 @@ static std::ostream & operator<<(std::ostream & o,
 	o<<"("<<t.tv_sec<<","<<t.tv_usec<<")";
 	return o;
 }
-/*-------------------*/
-/* BUFFER OPERATIONS */
-/*-------------------*/
+
+
+/*----------------*/
+/* BASIC SETTINGS */
+/*----------------*/
+
+/**
+ * FUNCTION init_bdw_source(filename)
+ *
+ * Init bandwidth data using a specified file
+ * File should have a format that reads like
+ * -----------------------------------------------------
+ * 1:|### HEADER FOR ONE LINE, WHICH WILL BE IGNORED ###
+ * 2:|<time1> <bdw1> <bdw2> ... <bdwn>
+ * 3:|<time1> <bdw1> <bdw2> ... <bdwn>
+ * . |
+ * . |
+ * . |
+ * n:|<timen> <bdw1> <bwd2> ... <bdwn> 
+ * -----------------------------------------------------
+ *
+ * @param filename		to specify the source file
+ *
+ * @returns 0 on success
+ *			-1 otherwise
+ *
+ * @tip		MUST call 'buffer_init' before call it
+ */
+int init_bdw_source(const char * filename)
+{
+	std::ifstream fin(filename);
+	if(!fin)
+	{
+		fprintf(stderr,"Cannot open bdw file %s\n",
+				filename);
+		return -1;
+	}
+
+	std::string line;
+	getline(fin,line);	
+
+	__useconds_t time;
+	__BDW_LINE pointer;
+	bool flag = true;
+	while(fin>>time)
+	{
+		if(flag) 
+		{
+			bdw_data.start = time;
+			flag = false;
+		}
+
+		pointer = new double[buffercnt];
+		for(int i=0;i<buffercnt;i++)
+			fin>>pointer[i];
+		bdw_data.data.push_back(pointer);	
+	}
+
+	bdw_data.end = time;
+	fin.close();
+	return 0;
+}
+
+
+/**
+ * FUNCTION clean_buffer()
+ *
+ * do clean up
+ */
+void clean_buffer()
+{
+	for(auto p : bdw_data.data)
+	{
+		delete[] p;
+	}
+	bdw_data.data.clear();
+	bdw_data.start = bdw_data.end = 0;
+	
+	for(int i=0;i<buffercnt;i++)
+		buffers[i].pkts.clear();
+	delete[] buffers;
+}
 
 /**
  * FUNCTION buffer_init
@@ -41,6 +130,8 @@ static std::ostream & operator<<(std::ostream & o,
 int buffer_init(size_t count)
 {
 	buffers = new Buffer[count+1];
+	for(size_t i=0;i<count+1;i++)
+		buffers[i].c_cnt = buffers[i].c_len = 0;
 	if(!buffers)
 	{
 		fprintf(stderr,"Cannot allocate memory for buffers!\n");
@@ -51,6 +142,35 @@ int buffer_init(size_t count)
 }
 
 
+/*-------------------*/
+/* BUFFER OPERATIONS */
+/*-------------------*/
+
+/**
+ * FUNCTION get_card_count()
+ *
+ * @returns card number which passed into 'buffer_init'
+ */
+int get_card_count()
+{
+	return buffercnt;
+}
+
+
+/**
+ * FUNCTION buffer_add(buf,len)
+ *
+ * Add a new packet of 'len' size into specified buffer
+ *
+ * @param buf	the specified buffer
+ *		  len	size of new packet
+ */
+void buffer_add(Buffer & buf, double len)
+{
+	buf.c_len+=len;
+	buf.c_cnt++;
+	buf.pkts.push_back(len);
+}
 
 /**
  * FUNCTION buffer_add(index, len)
@@ -69,10 +189,55 @@ void buffer_add(int index, size_t len)
 		return;
 	}
 	Buffer & buf = buffers[index];
-	buf.c_len+=len;
-	buf.c_cnt++;
-	buf.pkts.push_back(len);
+	buffer_add(buf,len);
 }
+
+
+
+/**
+ * FUNCTION buffer_dec(buf, len)
+ *
+ * decrease "len" size bytes from specified buffer
+ *
+ * @param buf		to specify buffer
+ *		  len		size to decrease
+ *
+ * @returns	0 if there is still some content remain
+ *			in the buffer,
+ *			else return the "idle length"
+ *			-1 indicates error occurs
+ */
+double buffer_dec(Buffer & buf, double len)
+{
+	double ret = 0.0;
+	if(buf.c_len <= len)
+	{
+		ret = len - buf.c_len;	/*store the return value*/
+		buf.c_len = 0;
+		buf.c_cnt = 0;
+		buf.pkts.clear();
+		return ret;
+	}
+	else						/*still some contents after dec*/
+	{
+		buf.c_len -= len;
+		while(len > 0 && (*buf.pkts.begin())<=len)
+		{
+			/*a packet is sent*/
+			len -= (*buf.pkts.begin());
+			if(buf.pkts.size() == 0) 
+				fprintf(stderr,"cannot dec %lf! len = %lf buflen = %lf\n",
+						*buf.pkts.begin(), len, buf.c_len);
+			buf.pkts.pop_front();
+			buf.c_cnt--;
+		}
+
+		/* sent remain length */
+		*buf.pkts.begin() -= len;	
+	}
+	return 0;
+}
+
 
 
 
@@ -99,33 +264,8 @@ double buffer_dec(int index, double len)
 	}
 	
 	Buffer & buf = buffers[index];
-	double ret = 0.0;
-	if(buf.c_len <= len)
-	{
-		ret = len - buf.c_len;	/*store the return value*/
-		buf.c_len = 0;
-		buf.c_cnt = 0;
-		buf.pkts.clear();
-		return ret;
-	}
-	else						/*still some contents after dec*/
-	{
-		buf.c_len -= len;
-		while(len > 0 && (*buf.pkts.begin())<=len)
-		{
-			/*a packet is sent*/
-			len -= (*buf.pkts.begin());
-			buf.pkts.pop_front();
-			buf.c_cnt--;
-		}
-
-		/* sent remain length */
-		*buf.pkts.begin() -= len;	
-	}
-	return 0;
+	return buffer_dec(buf,len);
 }
-
-
 
 
 /**
@@ -207,6 +347,10 @@ struct timeval update_buffer(struct timeval delta,
 }
 
 
+Buffer get_buffer_info(int index)
+{
+	return buffers[index];
+}
 
 /*--------------*/
 /* INFO GETTERS */
@@ -215,5 +359,38 @@ struct timeval update_buffer(struct timeval delta,
 double get_bandwidth(int ind, struct timeval timestamp)
 {
 	//TODO: change here!
-	return 1500000.0;	/* 1.5 MiB per sec */
+	auto time = timestamp.tv_sec;
+	auto gap = time - bdw_data.start; 
+	
+	if(gap<0) 
+	{
+		fprintf(stderr, "time information error in get_bandwidth(ind=%d, timestamp=(%ld,%ld))\n",
+				ind,timestamp.tv_sec,timestamp.tv_usec);
+		return -1;
+	}
+
+	if(ind >= buffercnt)
+	{
+		fprintf(stderr, "Index too large! ind = %d\n",
+				ind);
+		return -1;
+	}
+
+	if((unsigned long)gap >= bdw_data.data.size())
+	{
+		return bdw_data.data.back()[ind];
+	}
+	
+	return bdw_data.data[gap][ind];
+
+}
+
+struct timeval get_bandwidth_start()
+{
+	return {bdw_data.start,0l};
+}
+
+struct timeval get_bandwidth_end()
+{
+	return {bdw_data.end,0l};
 }
