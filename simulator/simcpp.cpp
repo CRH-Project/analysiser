@@ -212,12 +212,12 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 
 	if(total == 1){
 	   	start = h->ts;
-		fprintf(stderr,"Starts at %ld\n",h->ts.tv_sec);
+		fprintf(stdout,"Starts at %ld\n",h->ts.tv_sec);
 	}
 
 	if(total % TIPNUM == 0)
 	{
-		fprintf(stderr,"%d packets done\n", total);
+		fprintf(stdout,"%d packets done\n", total);
 	}
 
 	curr = h->ts - start;
