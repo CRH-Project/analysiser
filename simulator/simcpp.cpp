@@ -214,14 +214,19 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	   	start = h->ts;
 		fprintf(stderr,"Starts at %ld\n",h->ts.tv_sec);
 	}
+
 	if(total % TIPNUM == 0)
 	{
 		fprintf(stderr,"%d packets done\n", total);
 	}
 
-	if(h->ts < get_bandwidth_start() ||
+	curr = h->ts - start;
+	if(prev+start < get_bandwidth_start() ||
 			get_bandwidth_end() < h->ts)
+	{
+		prev = curr;
 		return;
+	}
 
 	/*INITIALIZATION*/
 	const struct Ethernet *link = (struct Ethernet *)pkt;
@@ -234,7 +239,6 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 	if(!ISUSR(ntohl(net->dstip))) return;
 
 	/*GET TIME INFO*/
-	curr = h->ts - start;
 	struct timeval delta = curr - prev;
 	if(delta.tv_sec == -1)
 	{

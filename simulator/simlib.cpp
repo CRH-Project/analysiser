@@ -282,7 +282,7 @@ double buffer_dec(int index, double len)
 struct timeval update_buffer(struct timeval delta,
 						const struct timeval & interval)
 {
-	struct timeval start = get_start_time(),
+	struct timeval start = get_curr_time() + get_start_time(),
 				   duration,
 				   curr,	
 				   idle_time = {0l,0l},
