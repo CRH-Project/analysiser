@@ -220,6 +220,9 @@ void roller(u_char * name, const struct pcap_pkthdr *h,
 		fprintf(stdout,"%d packets done\n", total);
 	}
 
+	if(h->ts < start)
+		return;
+
 	curr = h->ts - start;
 	if(prev+start < get_bandwidth_start() ||
 			get_bandwidth_end() < h->ts)
