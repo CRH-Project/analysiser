@@ -70,6 +70,7 @@ class CanAdd
 //				std::cout<<contentSize.size()<<std::endl;
 				int & i = flowPerContent[ts.type].back();
 				i+=htp.tot_len;
+				tgts.updateTime(htp.getStartTime());
 				return true;
 			}
 			else return false;
@@ -108,7 +109,7 @@ inline void flush()
 	int tot_flows = 0;
 	for(auto tgt : targetSet)
 	{
-		tgtArrayS.push_back(TargetShooterS(tgt.ch,0));
+		tgtArrayS.push_back(TargetShooterS(tgt.ch,0,tgt.type));
 		flowPerContent[tgt.type].push_back(0);
 		std::remove_if(buffer.begin(),buffer.end(),
 				CanAdd(tgt,tgtArrayS.back()));
@@ -178,9 +179,10 @@ inline void dealDownlink(const char * app, HttpPacket & pack)
 				TargetShooter temp(
 						Channel(pack.ch),st,en,
 						std::string(type_s),TargetShooter::DOWNLINK);
-				tgtArrayS.push_back(TargetShooterS(
-										pack.ch,pack.tot_len)
-						);
+				TargetShooterS tempS(pack.ch,pack.tot_len,
+									std::string(type_s));
+				tempS.updateTime(pack.timestp);
+				tgtArrayS.push_back(tempS);
 				addTypeSize(temp,pack.tot_len);
 			}
 
@@ -228,6 +230,8 @@ void http_roller(u_char * user, const struct pcap_pkthdr * h, const u_char * pkt
 
 	//must be http then...
 	HttpPacket pack(Channel(srcip,dstip),seq,tot_len);
+	pack.setTime(h->ts);
+
 	if(ISHTTP(srcport))			// download > respond
 	{
 		dealDownlink(app,pack);
@@ -327,6 +331,22 @@ void printDomainStat()
 	}
 }
 
+void printFlowInfo()
+{
+	std::string pre = prefix + "flow_info.txt";
+	std::ofstream fout(pre,std::ios::out);
+	fout<<"TIME,TYPE,SIZE"<<std::endl; 
+	for(auto v : tgtArrayS)
+	{
+		std::string type = v.getType();
+		auto pos = type.find('/');
+		type = type.substr(0,pos);
+		fout<<v.getStartTime().tv_sec<<" "<<type<<" "<<v.size
+			<<std::endl;
+	} 
+	fout.close();
+}
+
 void print()
 {
 	std::cerr<<"flushing..."<<std::endl;
@@ -337,6 +357,8 @@ void print()
 	printFlowPerContent();
 	std::cerr<<"Printing domain info"<<std::endl;
 	printDomainStat();
+	std::cerr<<"printing flow info"<<std::endl;
+	printFlowInfo();
 }
 
 void setPrefix(const std::string &s)

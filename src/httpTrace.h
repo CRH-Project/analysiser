@@ -2,6 +2,7 @@
 #define _HTTP_TRACE_HH_
 
 #include "headers.h"
+#include "utils.h"
 #include "flow.h"
 #include "dns_trace.h"
 /*
@@ -45,6 +46,7 @@ struct HttpPacket
 	uint32_t seq;
 	uint16_t tot_len;		//HTTP payload len
 	bool taged=false;		//if true, then should be removed...
+	struct timeval timestp;
 
 	//Constructors
 	HttpPacket():ch(),seq(0),tot_len(0),taged(false)
@@ -57,6 +59,14 @@ struct HttpPacket
 		this->taged=false;
 		this->seq=s;
 		this->tot_len=tl;
+	}
+	void setTime(const struct timeval & t)
+	{
+		timestp = t;
+	}
+	struct timeval getStartTime() const
+	{
+		return timestp;
 	}
 };
 
@@ -111,14 +121,47 @@ inline bool operator<(const TargetShooter & l, const TargetShooter & r)
 }
 //inline bool operator==(const TargetShooter & l,
 
+
 struct TargetShooterS
 {
+private:
+	struct timeval st_time;
+	bool t_valid;
+public:
 	const Channel ch;
+	std::string type;
 	size_t size;
-	TargetShooterS(const Channel & l,int size = 0):ch(l)
+	
+	TargetShooterS(const Channel & l,int size = 0,
+			std::string tt = ""):ch(l),type(tt)
 	{
+
 		this->size = size;
+		t_valid = false;
 	}
+
+	void updateTime(const struct timeval & t)
+	{
+		if(t_valid == false)
+			st_time = t;
+		else if(t < st_time)
+			st_time = t;
+		t_valid = true;
+	}
+	struct timeval getStartTime()
+	{
+		if(!t_valid)
+		{
+			fprintf(stderr,"warning : getting uninitialized time info!\n");
+		}
+		return st_time;
+	}
+
+	const std::string & getType() const
+	{
+		return type;
+	}
+
 };
 
 /*
